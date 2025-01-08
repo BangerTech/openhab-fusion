@@ -46,7 +46,7 @@
     const templates = document.querySelectorAll('.widget-template');
     templates.forEach(template => {
       interact(template).draggable({
-        inertia: true,
+        inertia: false,
         autoScroll: true,
         listeners: {
           start: (event) => {
@@ -58,10 +58,11 @@
             ghost.className = 'widget-ghost';
             ghost.style.width = `${template.minW * gridSize}px`;
             ghost.style.height = `${template.minH * gridSize}px`;
-            ghost.style.backgroundColor = 'rgba(0, 123, 255, 0.3)'; // Bessere Sichtbarkeit
-            ghost.style.border = '2px dashed #007bff';
-            ghost.style.position = 'fixed'; // Wichtig für korrekte Positionierung
-            ghost.style.pointerEvents = 'none'; // Verhindert Interferenz mit Drop
+            ghost.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
+            ghost.style.border = '2px solid #007bff';
+            ghost.style.position = 'fixed';
+            ghost.style.pointerEvents = 'none';
+            ghost.style.zIndex = '1000';
             document.body.appendChild(ghost);
             
             event.target.ghost = ghost;
@@ -70,7 +71,6 @@
             const { ghost } = event.target;
             const { pageX, pageY } = event;
             
-            // Offset für bessere Positionierung
             ghost.style.transform = `translate(${pageX - ghost.offsetWidth/2}px, ${pageY - ghost.offsetHeight/2}px)`;
           },
           end: (event) => {
@@ -78,16 +78,19 @@
             const { ghost } = event.target;
             const { pageX, pageY } = event;
             
-            // Calculate grid position relative to grid
             const rect = gridElement.getBoundingClientRect();
             const scrollTop = window.scrollY || document.documentElement.scrollTop;
             const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
             
-            const x = Math.floor((pageX + scrollLeft - rect.left) / gridSize);
-            const y = Math.floor((pageY + scrollTop - rect.top) / gridSize);
+            // Berechne die Position relativ zum Grid
+            const relX = pageX + scrollLeft - rect.left;
+            const relY = pageY + scrollTop - rect.top;
             
-            // Add widget if dropped in valid area
-            if (x >= 0 && y >= 0 && x < rect.width/gridSize && y < rect.height/gridSize) {
+            const x = Math.floor(relX / gridSize);
+            const y = Math.floor(relY / gridSize);
+            
+            // Überprüfe, ob die Position innerhalb des Grids ist
+            if (relX >= 0 && relY >= 0 && relX < rect.width && relY < rect.height) {
               const template = widgetTypes.find(w => w.type === type);
               const newWidget = {
                 id: `widget-${Date.now()}`,
@@ -96,7 +99,8 @@
                 y: y,
                 w: template.minW,
                 h: template.minH,
-                item: null
+                item: null,
+                options: {}
               };
               
               dashboard = [...dashboard, newWidget];
@@ -520,53 +524,59 @@
 
   .widget-template {
     cursor: move;
-    padding: 10px;
-    margin: 5px;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    padding: 12px;
+    margin: 8px;
+    background-color: #ffffff;
+    border: 2px solid #007bff;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
   .widget-template:hover {
-    background-color: #e9ecef;
+    background-color: #f0f8ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
 
-  .widget-item {
-    position: absolute;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    transition: box-shadow 0.3s;
+  .widget-template i {
+    color: #007bff;
+    font-size: 1.2em;
+  }
+
+  .widget-template span {
+    color: #2c3e50;
+    font-weight: 500;
+  }
+
+  .grid-container.editing {
+    background: rgba(240, 240, 240, 0.8);
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+  }
+
+  .widget-ghost {
+    background-color: rgba(0, 123, 255, 0.5) !important;
+    border: 2px solid #007bff !important;
+    border-radius: 6px !important;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3) !important;
+  }
+
+  .grid-line {
+    display: block;
+    background: rgba(0, 123, 255, 0.1);
   }
 
   .widget-item.editing {
     border: 2px solid #007bff;
-    background-color: rgba(0, 123, 255, 0.05);
-    cursor: move;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
   }
 
   .widget-item.editing:hover {
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
-  }
-
-  .widget-controls {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    display: flex;
-    gap: 5px;
-  }
-
-  .widget-controls button {
-    padding: 4px 8px;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .widget-controls button:hover {
-    background-color: #f8f9fa;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
   }
 </style> 
