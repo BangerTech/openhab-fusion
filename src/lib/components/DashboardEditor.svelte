@@ -23,7 +23,14 @@
     }
   });
 
-  export let items: any[] = [];
+  interface OpenHABItem {
+    name: string;
+    label?: string;
+    type: string;
+    state?: string;
+  }
+
+  export let items: OpenHABItem[] = [];
   export let dashboard: DashboardItem[] = [];
   export let isEditing = false;
   
@@ -32,7 +39,17 @@
   let gridElement: HTMLElement;
   let gridSize = 20;
 
-  const widgetTypes = [
+  // Definieren Sie zuerst einen Typ für die Widget-Templates
+  type WidgetTemplate = {
+    type: WidgetType;
+    icon: string;
+    label: string;
+    minW: number;
+    minH: number;
+  };
+
+  // Dann typisieren Sie das Array entsprechend
+  const widgetTypes: WidgetTemplate[] = [
     { type: 'switch', icon: 'toggle-on', label: 'Switch', minW: 2, minH: 1 },
     { type: 'dimmer', icon: 'sliders-h', label: 'Dimmer', minW: 2, minH: 1 },
     { type: 'number', icon: 'thermometer-half', label: 'Sensor', minW: 2, minH: 1 },
@@ -41,9 +58,18 @@
     { type: 'weather', icon: 'cloud-sun', label: 'Weather', minW: 4, minH: 2 }
   ];
 
+  // Stellen Sie sicher, dass die Template-Suche typsicher ist
+  function findTemplate(type: string): WidgetTemplate | undefined {
+    return widgetTypes.find(w => w.type === type);
+  }
+
+  let widgetTemplates: NodeListOf<Element>;
+
   $: if (isEditing && gridElement) {
     console.log('Edit mode changed, reinitializing widgets');
-    initializeWidgets();
+    setTimeout(() => {
+      initializeWidgets();
+    }, 100);
   }
 
   function initializeWidgets() {
@@ -52,64 +78,87 @@
       return;
     }
 
+    // Zuerst alle bestehenden Interaktionen entfernen
+    interact('.grid-container').unset();
+    interact('.widget-template').unset();
+
     if (isEditing) {
+      // Dropzone konfigurieren
       interact('.grid-container').dropzone({
         accept: '.widget-template',
-        overlap: 0.5,
+        overlap: 'pointer',
+        ondropactivate: function (event) {
+          console.log('Drop activate');
+          event.target.classList.add('drop-possible');
+        },
+        ondropdeactivate: function (event) {
+          console.log('Drop deactivate');
+          event.target.classList.remove('drop-possible');
+          event.target.classList.remove('drop-active');
+        },
         ondragenter: function (event) {
-          event.target.classList.add('drop-active');
           console.log('Drag enter');
+          event.target.classList.add('drop-active');
         },
         ondragleave: function (event) {
-          event.target.classList.remove('drop-active');
           console.log('Drag leave');
+          event.target.classList.remove('drop-active');
         },
         ondrop: function (event) {
-          console.log('Drop event triggered');
+          console.log('Drop happened!');
           const type = event.relatedTarget.getAttribute('data-type');
+          if (!type) {
+            console.error('No type found on dragged element');
+            return;
+          }
+
+          const template = findTemplate(type);
+          if (!template) {
+            console.error('No template found for type:', type);
+            return;
+          }
+
           const rect = gridElement.getBoundingClientRect();
-          const scrollTop = window.scrollY || document.documentElement.scrollTop;
-          const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-          
-          const relX = event.pageX + scrollLeft - rect.left;
-          const relY = event.pageY + scrollTop - rect.top;
-          
-          const x = Math.floor(relX / gridSize);
-          const y = Math.floor(relY / gridSize);
-          
-          console.log('Drop position:', { x, y });
-          
-          const template = widgetTypes.find(w => w.type === type);
-          const newWidget = {
+          const x = Math.floor((event.dragEvent.clientX - rect.left) / gridSize);
+          const y = Math.floor((event.dragEvent.clientY - rect.top) / gridSize);
+
+          const newWidget: DashboardItem = {
             id: `widget-${Date.now()}`,
-            type: type,
-            x: x,
-            y: y,
+            type: type as WidgetType, // Type-Cast hier
+            x,
+            y,
             w: template.minW,
             h: template.minH,
             item: null,
             options: {}
           };
-          
+
+          console.log('Creating widget:', { type, template, newWidget });
           dashboard = [...dashboard, newWidget];
           dispatch('update', { dashboard });
           showItemSelector(type);
-          
-          event.target.classList.remove('drop-active');
         }
       });
-    }
-    
-    const templates = document.querySelectorAll('.widget-template');
-    templates.forEach(template => {
-      interact(template).draggable({
+
+      // Draggable konfigurieren
+      interact('.widget-template').draggable({
         inertia: false,
         autoScroll: true,
+        modifiers: [
+          interact.modifiers.restrict({
+            restriction: 'body'
+          })
+        ],
         listeners: {
-          start: (event) => {
-            console.log('Drag start');
+          start: function (event) {
             const type = event.target.getAttribute('data-type');
             const template = widgetTypes.find(w => w.type === type);
+            if (!template) {
+              console.error('No template found for type:', type);
+              return;
+            }
+
+            console.log('Drag start:', { type, template });
             
             const ghost = document.createElement('div');
             ghost.className = 'widget-ghost';
@@ -124,12 +173,14 @@
             
             event.target.ghost = ghost;
           },
-          move: (event) => {
+          move: function (event) {
             const { ghost } = event.target;
-            const { pageX, pageY } = event;
-            ghost.style.transform = `translate(${pageX - ghost.offsetWidth/2}px, ${pageY - ghost.offsetHeight/2}px)`;
+            if (ghost) {
+              const { clientX, clientY } = event;
+              ghost.style.transform = `translate(${clientX - ghost.offsetWidth/2}px, ${clientY - ghost.offsetHeight/2}px)`;
+            }
           },
-          end: (event) => {
+          end: function (event) {
             console.log('Drag end');
             if (event.target.ghost) {
               event.target.ghost.remove();
@@ -137,7 +188,7 @@
           }
         }
       });
-    });
+    }
   }
 
   function initializeWidget(element) {
@@ -257,16 +308,62 @@
   let showingItemSelector = false;
   let selectedWidgetType = '';
 
-  function showItemSelector(type: string) {
-    selectedWidgetType = type;
+  function mapOpenHABTypeToWidgetType(openhabType: string): string {
+    // OpenHAB-Typen in Kleinbuchstaben konvertieren und normalisieren
+    const type = openhabType.toLowerCase();
+    
+    // Mapping der OpenHAB-Typen zu Widget-Typen
+    const typeMapping: { [key: string]: string } = {
+      'switch': 'switch',
+      'dimmer': 'dimmer',
+      'number': 'number',
+      'number:temperature': 'number',
+      'number:dimensionless': 'number',
+      'number:energy': 'number',
+      'number:power': 'number',
+      'string': 'string'
+    };
+
+    return typeMapping[type] || type;
+  }
+
+  function showItemSelector(widgetType: WidgetType) {
+    console.log('Showing item selector for widget type:', widgetType);
+    selectedWidgetType = widgetType;
+    
+    const compatibleItems = items.filter(item => {
+      if (!item || !item.type) {
+        console.warn('Invalid item:', item);
+        return false;
+      }
+      
+      const mappedType = mapOpenHABTypeToWidgetType(item.type);
+      const isCompatible = mappedType === widgetType.toLowerCase();
+      
+      console.log('Item type check:', {
+        item: item.name,
+        originalType: item.type,
+        mappedType,
+        widgetType: widgetType.toLowerCase(),
+        isCompatible
+      });
+      
+      return isCompatible;
+    });
+
+    console.log('Compatible items:', compatibleItems);
     showingItemSelector = true;
   }
 
-  function selectItem(item) {
+  function selectItem(item: OpenHABItem) {
+    console.log('Selecting item:', item);
     const widget = dashboard[dashboard.length - 1];
     if (widget) {
       widget.item = item.name;
+      console.log('Updated widget:', widget);
       dispatch('update', { dashboard: [...dashboard] });
+    } else {
+      console.error('No widget found to update');
     }
     showingItemSelector = false;
   }
@@ -281,7 +378,6 @@
           <div 
             class="widget-template"
             data-type={widget.type}
-            draggable="true"
           >
             <i class="fas fa-{widget.icon}"></i>
             <span>{widget.label}</span>
@@ -345,13 +441,20 @@
     <div class="modal-content" role="dialog" aria-modal="true">
       <h3>Select Item for {selectedWidgetType}</h3>
       <div class="items-list">
-        {#each items.filter(item => item.type.toLowerCase() === selectedWidgetType.toLowerCase()) as item}
+        {#each items.filter(item => {
+          const mappedType = mapOpenHABTypeToWidgetType(item.type);
+          return mappedType === selectedWidgetType.toLowerCase();
+        }) as item (item.name)}
           <button 
             class="item-option"
             on:click={() => selectItem(item)}
           >
-            <span class="item-name">{item.label || item.name}</span>
-            <span class="item-state">{item.state}</span>
+            <div class="item-info">
+              <span class="item-name">{item.label || item.name}</span>
+              {#if item.state !== undefined}
+                <span class="item-state">{item.state}</span>
+              {/if}
+            </div>
           </button>
         {/each}
       </div>
@@ -381,6 +484,7 @@
     background: transparent;
     min-height: 1000px;
     border: none;
+    touch-action: none;
   }
 
   .grid-container.editing {
@@ -450,6 +554,10 @@
     gap: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     opacity: 1;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
   }
 
   .widget-template:hover {
@@ -634,5 +742,49 @@
   .grid-container.drop-active {
     border-color: #28a745;
     background: rgba(40, 167, 69, 0.1);
+  }
+
+  .item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .item-name {
+    font-weight: 500;
+    color: #2c3e50;
+  }
+
+  .item-state {
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .item-option {
+    width: 100%;
+    padding: 1rem;
+    background: #f8f9fa;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .item-option:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+  }
+
+  .items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    max-height: 60vh;
+    overflow-y: auto;
   }
 </style> 

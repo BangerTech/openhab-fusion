@@ -2,11 +2,9 @@ export type WidgetType =
   | 'switch'
   | 'dimmer'
   | 'number'
-  | 'string'
-  | 'color'
-  | 'rollershutter'
   | 'chart'
-  | 'group';
+  | 'camera'
+  | 'weather';
 
 export interface WidgetConfig {
   title?: string;
@@ -25,4 +23,14 @@ export interface WidgetTheme {
   textColor: string;
   borderColor?: string;
   accentColor?: string;
-} 
+}
+
+export const OPENHAB_TYPE_MAPPING = {
+  'Switch': ['switch'],
+  'Dimmer': ['dimmer'],
+  'Number': ['number', 'number:temperature', 'number:dimensionless', 'number:energy', 'number:power'],
+  'String': ['string'],
+  'Color': ['color'],
+  'Rollershutter': ['rollershutter'],
+  'Group': ['group']
+} as const; 
