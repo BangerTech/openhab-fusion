@@ -6,6 +6,8 @@
   
   // Widget-Komponenten importieren
   import SwitchWidget from './widgets/SwitchWidget.svelte';
+  import SensorWidget from './widgets/SensorWidget.svelte';
+  import DimmerWidget from './widgets/DimmerWidget.svelte';
 
   declare global {
     interface Window {
@@ -424,13 +426,11 @@
         use:initializeWidget
       >
         {#if widget.type === 'switch'}
-          <SwitchWidget 
-            {widget} 
-            {isEditing} 
-            on:change={(event) => {
-              dispatch('itemChange', event.detail);
-            }}
-          />
+          <SwitchWidget {widget} {isEditing} />
+        {:else if widget.type === 'dimmer'}
+          <DimmerWidget {widget} {isEditing} />
+        {:else if widget.type === 'number'}
+          <SensorWidget {widget} {isEditing} />
         {:else}
           <div>Unsupported widget type: {widget.type}</div>
         {/if}

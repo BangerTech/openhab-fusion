@@ -107,9 +107,10 @@
     padding: 1rem;
     border: none;
     border-radius: 1.2rem;
-    background: white;
+    background: rgba(38, 198, 218, 0.15);
+    color: white;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
   }
 
@@ -141,12 +142,12 @@
   .widget-label {
     font-size: 1rem;
     font-weight: 500;
-    color: #2c3e50;
+    color: white;
   }
 
   .widget-state {
     font-size: 0.8rem;
-    color: #666;
+    color: rgba(255, 255, 255, 0.8);
     opacity: 0.8;
   }
 
@@ -157,7 +158,7 @@
   .switch-track {
     width: 3.2rem;
     height: 1.8rem;
-    background: #e0e0e0;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 1rem;
     position: relative;
     transition: background 0.3s ease;
@@ -176,7 +177,7 @@
   }
 
   .switch-widget.active .switch-track {
-    background: #4CAF50;
+    background: #26c6da;
   }
 
   .switch-widget.active .switch-thumb {
@@ -185,7 +186,7 @@
 
   /* Optional: Dunklerer Hintergrund für aktive Widgets */
   .switch-widget.active {
-    background: #f8fff8;
+    background: rgba(38, 198, 218, 0.25);
   }
 
   /* Hover-Effekte */
@@ -200,7 +201,7 @@
 
   /* Editing-Zustand */
   .switch-widget.editing {
-    border: 2px dashed #ccc;
-    background: #fafafa;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
   }
 </style> 
