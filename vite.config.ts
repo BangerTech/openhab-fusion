@@ -2,7 +2,11 @@
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import preprocess from 'svelte-preprocess'
-import { resolve } from 'path'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 export default defineConfig({
   plugins: [
@@ -16,15 +20,9 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'src/index.html')
+        main: path.resolve(__dirname, 'src/index.html')
       }
     }
-  },
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src')
-    },
-    dedupe: ['svelte', 'svelte-routing']
   },
   optimizeDeps: {
     include: ['svelte-routing']

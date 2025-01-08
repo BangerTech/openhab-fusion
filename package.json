@@ -10,8 +10,7 @@
   },
   "dependencies": {
     "svelte": "^4.2.0",
-    "svelte-routing": "^2.0.0",
-    "@interactjs/interact": "^1.10.26"
+    "svelte-routing": "^2.0.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.4.0",

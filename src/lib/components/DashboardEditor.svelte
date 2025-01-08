@@ -3,7 +3,25 @@
   import type { DashboardItem } from '../types/dashboard';
   import type { WidgetType } from '../types/widgets';
   import { onMount } from 'svelte';
-  import interact from '@interactjs/interact';
+
+  declare global {
+    interface Window {
+      interact: any;
+    }
+  }
+
+  let interact: any;
+
+  onMount(() => {
+    interact = window.interact;
+    if (!gridElement) return;
+
+    console.log('Initializing editor, isEditing:', isEditing);
+
+    if (isEditing) {
+      initializeWidgets();
+    }
+  });
 
   export let items: any[] = [];
   export let dashboard: DashboardItem[] = [];
@@ -12,7 +30,7 @@
   const dispatch = createEventDispatcher();
   let editingWidget: DashboardItem | null = null;
   let gridElement: HTMLElement;
-  let gridSize = 20; // Größe eines Grid-Elements in Pixeln
+  let gridSize = 20;
 
   const widgetTypes = [
     { type: 'switch', icon: 'toggle-on', label: 'Switch', minW: 2, minH: 1 },
@@ -23,26 +41,65 @@
     { type: 'weather', icon: 'cloud-sun', label: 'Weather', minW: 4, minH: 2 }
   ];
 
-  onMount(() => {
-    if (!gridElement) return;
-
-    console.log('Initializing editor, isEditing:', isEditing);
-
-    if (isEditing) {
-      initializeWidgets();
-    }
-  });
-
   $: if (isEditing && gridElement) {
     console.log('Edit mode changed, reinitializing widgets');
     initializeWidgets();
   }
 
   function initializeWidgets() {
-    const widgets = gridElement.querySelectorAll('.widget-item');
-    widgets.forEach(initializeWidget);
+    if (!interact) {
+      console.error('Interact.js not initialized');
+      return;
+    }
+
+    if (isEditing) {
+      interact('.grid-container').dropzone({
+        accept: '.widget-template',
+        overlap: 0.5,
+        ondragenter: function (event) {
+          event.target.classList.add('drop-active');
+          console.log('Drag enter');
+        },
+        ondragleave: function (event) {
+          event.target.classList.remove('drop-active');
+          console.log('Drag leave');
+        },
+        ondrop: function (event) {
+          console.log('Drop event triggered');
+          const type = event.relatedTarget.getAttribute('data-type');
+          const rect = gridElement.getBoundingClientRect();
+          const scrollTop = window.scrollY || document.documentElement.scrollTop;
+          const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+          
+          const relX = event.pageX + scrollLeft - rect.left;
+          const relY = event.pageY + scrollTop - rect.top;
+          
+          const x = Math.floor(relX / gridSize);
+          const y = Math.floor(relY / gridSize);
+          
+          console.log('Drop position:', { x, y });
+          
+          const template = widgetTypes.find(w => w.type === type);
+          const newWidget = {
+            id: `widget-${Date.now()}`,
+            type: type,
+            x: x,
+            y: y,
+            w: template.minW,
+            h: template.minH,
+            item: null,
+            options: {}
+          };
+          
+          dashboard = [...dashboard, newWidget];
+          dispatch('update', { dashboard });
+          showItemSelector(type);
+          
+          event.target.classList.remove('drop-active');
+        }
+      });
+    }
     
-    // Initialize widget templates
     const templates = document.querySelectorAll('.widget-template');
     templates.forEach(template => {
       interact(template).draggable({
@@ -50,10 +107,10 @@
         autoScroll: true,
         listeners: {
           start: (event) => {
+            console.log('Drag start');
             const type = event.target.getAttribute('data-type');
             const template = widgetTypes.find(w => w.type === type);
             
-            // Create ghost element with better visibility
             const ghost = document.createElement('div');
             ghost.className = 'widget-ghost';
             ghost.style.width = `${template.minW * gridSize}px`;
@@ -70,45 +127,13 @@
           move: (event) => {
             const { ghost } = event.target;
             const { pageX, pageY } = event;
-            
             ghost.style.transform = `translate(${pageX - ghost.offsetWidth/2}px, ${pageY - ghost.offsetHeight/2}px)`;
           },
           end: (event) => {
-            const type = event.target.getAttribute('data-type');
-            const { ghost } = event.target;
-            const { pageX, pageY } = event;
-            
-            const rect = gridElement.getBoundingClientRect();
-            const scrollTop = window.scrollY || document.documentElement.scrollTop;
-            const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-            
-            // Berechne die Position relativ zum Grid
-            const relX = pageX + scrollLeft - rect.left;
-            const relY = pageY + scrollTop - rect.top;
-            
-            const x = Math.floor(relX / gridSize);
-            const y = Math.floor(relY / gridSize);
-            
-            // Überprüfe, ob die Position innerhalb des Grids ist
-            if (relX >= 0 && relY >= 0 && relX < rect.width && relY < rect.height) {
-              const template = widgetTypes.find(w => w.type === type);
-              const newWidget = {
-                id: `widget-${Date.now()}`,
-                type: type,
-                x: x,
-                y: y,
-                w: template.minW,
-                h: template.minH,
-                item: null,
-                options: {}
-              };
-              
-              dashboard = [...dashboard, newWidget];
-              dispatch('update', { dashboard });
-              showItemSelector(type);
+            console.log('Drag end');
+            if (event.target.ghost) {
+              event.target.ghost.remove();
             }
-            
-            ghost.remove();
           }
         }
       });
@@ -172,11 +197,9 @@
     let x = (parseFloat(target.getAttribute('data-x')) || 0);
     let y = (parseFloat(target.getAttribute('data-y')) || 0);
 
-    // Aktualisiere die Größe
     target.style.width = `${event.rect.width}px`;
     target.style.height = `${event.rect.height}px`;
 
-    // Kompensiere die Position
     x += event.deltaRect.left;
     y += event.deltaRect.top;
 
@@ -274,7 +297,6 @@
     bind:this={gridElement}
   >
     <div class="grid-background">
-      <!-- Grid-Linien -->
       {#each Array(50) as _, i}
         <div class="grid-line horizontal" style="top: {i * gridSize}px"></div>
         <div class="grid-line vertical" style="left: {i * gridSize}px"></div>
@@ -314,8 +336,13 @@
 
 {#if showingItemSelector}
   <div class="item-selector-modal">
-    <div class="modal-overlay" on:click={() => showingItemSelector = false}></div>
-    <div class="modal-content">
+    <button 
+      class="modal-overlay"
+      on:click={() => showingItemSelector = false}
+      on:keydown={(e) => e.key === 'Escape' && (showingItemSelector = false)}
+      aria-label="Close modal"
+    ></button>
+    <div class="modal-content" role="dialog" aria-modal="true">
       <h3>Select Item for {selectedWidgetType}</h3>
       <div class="items-list">
         {#each items.filter(item => item.type.toLowerCase() === selectedWidgetType.toLowerCase()) as item}
@@ -351,12 +378,14 @@
     position: relative;
     flex: 1;
     overflow: auto;
-    background: #f5f5f5;
+    background: transparent;
     min-height: 1000px;
+    border: none;
   }
 
   .grid-container.editing {
-    background: #e5e5e5;
+    background: rgba(240, 240, 240, 0.95);
+    border: 2px dashed #007bff;
   }
 
   .grid-background {
@@ -409,20 +438,24 @@
   }
 
   .widget-template {
+    cursor: move;
+    padding: 12px;
+    margin: 8px;
+    background-color: #ffffff;
+    border: 2px solid #007bff;
+    border-radius: 6px;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: #f5f5f5;
-    border-radius: 6px;
-    cursor: move;
-    margin-bottom: 0.5rem;
-    transition: all 0.2s;
+    gap: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    opacity: 1;
   }
 
   .widget-template:hover {
-    background: #e5e5e5;
+    background-color: #f0f8ff;
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
 
   .widget-ghost {
@@ -471,6 +504,10 @@
     right: 0;
     bottom: 0;
     background: rgba(0,0,0,0.5);
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
   }
 
   .modal-content {
@@ -534,6 +571,7 @@
     align-items: center;
     gap: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    opacity: 1;
   }
 
   .widget-template:hover {
@@ -553,9 +591,8 @@
   }
 
   .grid-container.editing {
-    background: rgba(240, 240, 240, 0.8);
-    border: 2px dashed #ccc;
-    border-radius: 8px;
+    border: 2px dashed #007bff;
+    background: rgba(240, 240, 240, 0.95);
   }
 
   .widget-ghost {
@@ -578,5 +615,24 @@
 
   .widget-item.editing:hover {
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  }
+
+  .grid-container.drop-target {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+  }
+
+  .widget-ghost {
+    background-color: rgba(0, 123, 255, 0.5) !important;
+    border: 2px solid #007bff !important;
+    border-radius: 6px !important;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3) !important;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .grid-container.drop-active {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
   }
 </style> 

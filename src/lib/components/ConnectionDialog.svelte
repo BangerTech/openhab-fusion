@@ -94,7 +94,7 @@
     min-height: 100vh;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: rgba(240, 240, 240, 0.95);
     padding: 1rem;
   }
 
@@ -103,7 +103,7 @@
     max-width: 400px;
     background: white;
     border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 16px rgba(79, 172, 254, 0.1);
     overflow: hidden;
     transform: translateY(0);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -111,25 +111,25 @@
 
   .connection-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    box-shadow: 0 12px 24px rgba(79, 172, 254, 0.2);
   }
 
   .icon-section {
     padding: 2rem;
     text-align: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
     color: white;
   }
 
   .icon-circle {
     width: 80px;
     height: 80px;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.3);
     border-radius: 50%;
     margin: 0 auto 1rem;
     display: grid;
     place-items: center;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
   }
 
   .icon-circle i {
@@ -176,8 +176,8 @@
 
   input:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
   }
 
   small {
@@ -206,7 +206,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
     color: white;
     border: none;
     border-radius: 10px;
@@ -218,7 +218,7 @@
 
   .connect-button:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102,126,234,0.25);
+    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.25);
   }
 
   .connect-button:disabled {
