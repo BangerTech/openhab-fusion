@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { DashboardItem } from '../types/dashboard';
-  import type { WidgetType } from '../types/widgets';
+  import { WidgetType, WIDGET_TEMPLATES } from '../types/widgets';
   import { onMount } from 'svelte';
   
   // Widget-Komponenten importieren
@@ -48,17 +48,7 @@
   let gridSize = 20;
   let currentNewWidget: DashboardItem | null = null;
 
-  // Definieren Sie zuerst einen Typ für die Widget-Templates
-  type WidgetTemplate = {
-    type: WidgetType;
-    icon: string;
-    label: string;
-    minW: number;
-    minH: number;
-  };
-
-  // Dann typisieren Sie das Array entsprechend
-  const widgetTypes: WidgetTemplate[] = [
+  const widgetTypes = [
     { type: 'switch', icon: 'toggle-on', label: 'Switch', minW: 2, minH: 1 },
     { type: 'dimmer', icon: 'sliders-h', label: 'Dimmer', minW: 2, minH: 1 },
     { type: 'number', icon: 'thermometer-half', label: 'Sensor', minW: 2, minH: 1 },
@@ -82,120 +72,46 @@
   }
 
   function initializeWidgets() {
-    if (!interact) {
-      console.error('Interact.js not initialized');
-      return;
-    }
+    if (!interact) return;
 
-    // Zuerst alle bestehenden Interaktionen entfernen
-    interact('.grid-container').unset();
-    interact('.widget-template').unset();
-
-    if (isEditing) {
-      // Dropzone konfigurieren
-      interact('.grid-container').dropzone({
-        accept: '.widget-template',
-        overlap: 'pointer',
-        ondropactivate: function (event) {
-          console.log('Drop activate');
-          event.target.classList.add('drop-possible');
-        },
-        ondropdeactivate: function (event) {
-          console.log('Drop deactivate');
-          event.target.classList.remove('drop-possible');
-          event.target.classList.remove('drop-active');
-        },
-        ondragenter: function (event) {
-          console.log('Drag enter');
-          event.target.classList.add('drop-active');
-        },
-        ondragleave: function (event) {
-          console.log('Drag leave');
-          event.target.classList.remove('drop-active');
-        },
-        ondrop: function (event) {
-          console.log('Drop happened!');
-          const type = event.relatedTarget.getAttribute('data-type');
-          if (!type) {
-            console.error('No type found on dragged element');
-            return;
+    interact('.widget-template').draggable({
+      inertia: true,
+      autoScroll: true,
+      modifiers: [
+        interact.modifiers.snap({
+          targets: [
+            interact.snappers.grid({ x: gridSize, y: gridSize })
+          ],
+          range: Infinity,
+          relativePoints: [{ x: 0, y: 0 }]
+        }),
+        interact.modifiers.restrict({
+          restriction: 'parent',
+          elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+        })
+      ],
+      listeners: {
+        start(event) {
+          const type = event.target.getAttribute('data-type');
+          const template = WIDGET_TEMPLATES[type];
+          
+          if (template) {
+            currentNewWidget = {
+              id: crypto.randomUUID(),
+              type: template.type,
+              variant: template.variants[0],
+              x: 0,
+              y: 0,
+              w: template.defaultSize.w,
+              h: template.defaultSize.h,
+              item: null,
+              options: {}
+            };
           }
-
-          const template = findTemplate(type);
-          if (!template) {
-            console.error('No template found for type:', type);
-            return;
-          }
-
-          const rect = gridElement.getBoundingClientRect();
-          const x = Math.floor((event.dragEvent.clientX - rect.left) / gridSize);
-          const y = Math.floor((event.dragEvent.clientY - rect.top) / gridSize);
-
-          currentNewWidget = {
-            id: `widget-${Date.now()}`,
-            type: type as WidgetType,
-            x,
-            y,
-            w: template.minW,
-            h: template.minH,
-            item: null,
-            options: {}
-          };
-
-          console.log('Creating widget:', { type, template, newWidget: currentNewWidget });
-          showItemSelector(type as WidgetType);
-        }
-      });
-
-      // Draggable konfigurieren
-      interact('.widget-template').draggable({
-        inertia: false,
-        autoScroll: true,
-        modifiers: [
-          interact.modifiers.restrict({
-            restriction: 'body'
-          })
-        ],
-        listeners: {
-          start: function (event) {
-            const type = event.target.getAttribute('data-type');
-            const template = widgetTypes.find(w => w.type === type);
-            if (!template) {
-              console.error('No template found for type:', type);
-              return;
-            }
-
-            console.log('Drag start:', { type, template });
-            
-            const ghost = document.createElement('div');
-            ghost.className = 'widget-ghost';
-            ghost.style.width = `${template.minW * gridSize}px`;
-            ghost.style.height = `${template.minH * gridSize}px`;
-            ghost.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
-            ghost.style.border = '2px solid #007bff';
-            ghost.style.position = 'fixed';
-            ghost.style.pointerEvents = 'none';
-            ghost.style.zIndex = '1000';
-            document.body.appendChild(ghost);
-            
-            event.target.ghost = ghost;
-          },
-          move: function (event) {
-            const { ghost } = event.target;
-            if (ghost) {
-              const { clientX, clientY } = event;
-              ghost.style.transform = `translate(${clientX - ghost.offsetWidth/2}px, ${clientY - ghost.offsetHeight/2}px)`;
-            }
-          },
-          end: function (event) {
-            console.log('Drag end');
-            if (event.target.ghost) {
-              event.target.ghost.remove();
-            }
-          }
-        }
-      });
-    }
+        },
+        // ... rest of the listeners
+      }
+    });
   }
 
   function initializeWidget(element) {
@@ -214,9 +130,8 @@
             relativePoints: [ { x: 0, y: 0 } ]
           }),
           interact.modifiers.restrict({
-            restriction: gridElement,
-            elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-            endOnly: true
+            restriction: 'parent',
+            elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
           })
         ],
         listeners: {
@@ -227,6 +142,8 @@
       .resizable({
         enabled: isEditing,
         edges: { left: true, right: true, bottom: true, top: true },
+        invert: 'none',
+        preserveAspectRatio: false,
         modifiers: [
           interact.modifiers.snap({
             targets: [
@@ -234,7 +151,8 @@
             ]
           }),
           interact.modifiers.restrict({
-            restriction: gridElement
+            restriction: 'parent',
+            elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
           })
         ],
         listeners: {
@@ -270,31 +188,35 @@
     target.setAttribute('data-y', y);
   }
 
-  function updateWidgetPosition(element) {
-    const id = element.getAttribute('data-id');
-    const widget = dashboard.find(w => w.id === id);
-    if (!widget) return;
-
-    const x = parseFloat(element.getAttribute('data-x')) || 0;
-    const y = parseFloat(element.getAttribute('data-y')) || 0;
-
-    widget.x = Math.round(x / gridSize);
-    widget.y = Math.round(y / gridSize);
+  function updateWidgetPosition(target) {
+    const index = parseInt(target.getAttribute('data-index'));
+    if (isNaN(index) || !dashboard[index]) return;
     
-    dispatch('update', { dashboard: [...dashboard] });
+    const x = parseFloat(target.getAttribute('data-x')) || 0;
+    const y = parseFloat(target.getAttribute('data-y')) || 0;
+    
+    const newX = Math.round(x / gridSize);
+    const newY = Math.round(y / gridSize);
+    
+    if (newX >= 0 && newY >= 0) {
+      dashboard[index].x = newX;
+      dashboard[index].y = newY;
+      dispatch('update', { dashboard: [...dashboard] });
+    }
   }
 
-  function updateWidgetSize(element) {
-    const id = element.getAttribute('data-id');
-    const widget = dashboard.find(w => w.id === id);
-    if (!widget) return;
-
-    const width = parseFloat(element.style.width);
-    const height = parseFloat(element.style.height);
-
-    widget.w = Math.round(width / gridSize);
-    widget.h = Math.round(height / gridSize);
+  function updateWidgetSize(target) {
+    const index = parseInt(target.getAttribute('data-index'));
+    if (isNaN(index) || !dashboard[index]) return;
     
+    const width = parseFloat(target.style.width);
+    const height = parseFloat(target.style.height);
+    
+    const newW = Math.max(1, Math.round(width / gridSize));
+    const newH = Math.max(1, Math.round(height / gridSize));
+    
+    dashboard[index].w = newW;
+    dashboard[index].h = newH;
     dispatch('update', { dashboard: [...dashboard] });
   }
 

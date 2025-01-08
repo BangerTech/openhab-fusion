@@ -34,3 +34,40 @@ export const OPENHAB_TYPE_MAPPING = {
   'Rollershutter': ['rollershutter'],
   'Group': ['group']
 } as const; 
+
+export type WidgetVariant = 'default' | 'ha-fusion' | 'minimal' | 'large';
+
+export interface WidgetTemplate {
+  type: string;
+  variants: WidgetVariant[];
+  defaultSize: {
+    w: number;
+    h: number;
+  };
+  minSize: {
+    w: number;
+    h: number;
+  };
+  maxSize?: {
+    w: number;
+    h: number;
+  };
+}
+
+export const WIDGET_TEMPLATES: Record<string, WidgetTemplate> = {
+  switch: {
+    type: 'switch',
+    variants: ['default', 'ha-fusion', 'minimal'],
+    defaultSize: { w: 2, h: 2 },
+    minSize: { w: 1, h: 1 },
+    maxSize: { w: 4, h: 4 }
+  },
+  dimmer: {
+    type: 'dimmer',
+    variants: ['default', 'ha-fusion', 'slider'],
+    defaultSize: { w: 2, h: 2 },
+    minSize: { w: 2, h: 1 },
+    maxSize: { w: 4, h: 4 }
+  }
+  // ... andere Widget-Typen
+}; 

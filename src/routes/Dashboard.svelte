@@ -4,9 +4,14 @@
   import { openhabService, items } from '../lib/stores';
   import DashboardEditor from '../lib/components/DashboardEditor.svelte';
   import OpenHABItem from '../lib/components/OpenHABItem.svelte';
+  import TabEditor from '../lib/components/TabEditor.svelte';
+  import SidebarEditor from '../lib/components/SidebarEditor.svelte';
 
   let dashboard = loadDashboard();
   let isEditing = false;
+  let tabs = loadTabs();
+  let activeTab = tabs[0]?.id || '';
+  let sidebarItems = loadSidebarItems();
 
   onMount(() => {
     if (!$openhabService) {
@@ -41,59 +46,93 @@
       saveDashboard();
     }
   }
+
+  function loadTabs() {
+    const saved = localStorage.getItem('tabs');
+    return saved ? JSON.parse(saved) : [
+      { id: 'default', name: 'Hemma' }
+    ];
+  }
+
+  function loadSidebarItems() {
+    const saved = localStorage.getItem('sidebarItems');
+    return saved ? JSON.parse(saved) : [];
+  }
+
+  function handleTabUpdate(event) {
+    tabs = event.detail.tabs;
+    localStorage.setItem('tabs', JSON.stringify(tabs));
+  }
+
+  function handleSidebarUpdate(event) {
+    sidebarItems = event.detail.items;
+    localStorage.setItem('sidebarItems', JSON.stringify(sidebarItems));
+  }
 </script>
 
 <div class="dashboard">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <div class="time">{new Date().toLocaleTimeString()}</div>
-      <div class="date">
-        {new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+  <SidebarEditor 
+    items={sidebarItems}
+    {isEditing}
+    on:update={handleSidebarUpdate}
+  >
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="time">{new Date().toLocaleTimeString()}</div>
+        <div class="date">
+          {new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+        </div>
+        <div class="weather">
+          2°C
+          <span class="humidity">81%</span>
+        </div>
       </div>
-      <div class="weather">
-        2°C
-        <span class="humidity">81%</span>
-      </div>
-    </div>
-    
-    <nav class="sidebar-nav">
-      <button class="nav-item active">
-        <i class="fas fa-home"></i>
-        Hemma
-      </button>
-      <button class="nav-item">
-        <i class="fas fa-shapes"></i>
-        Entities
-      </button>
-    </nav>
+      
+      <nav class="sidebar-nav">
+        <button class="nav-item active">
+          <i class="fas fa-home"></i>
+          Hemma
+        </button>
+        <button class="nav-item">
+          <i class="fas fa-shapes"></i>
+          Entities
+        </button>
+      </nav>
 
-    <div class="system-info">
-      <div class="info-item">
-        <span>CPU</span>
-        <div class="progress-bar">
-          <div class="progress" style="width: 15%"></div>
+      <div class="system-info">
+        <div class="info-item">
+          <span>CPU</span>
+          <div class="progress-bar">
+            <div class="progress" style="width: 15%"></div>
+          </div>
+          <span>15%</span>
         </div>
-        <span>15%</span>
-      </div>
-      <div class="info-item">
-        <span>RAM</span>
-        <div class="progress-bar">
-          <div class="progress" style="width: 22%"></div>
+        <div class="info-item">
+          <span>RAM</span>
+          <div class="progress-bar">
+            <div class="progress" style="width: 22%"></div>
+          </div>
+          <span>22%</span>
         </div>
-        <span>22%</span>
       </div>
     </div>
-  </div>
+  </SidebarEditor>
 
   <div class="main-content">
     <div class="header">
-      <div class="tabs">
-        <button class="tab active">Hemma</button>
-        <button class="tab">Entities</button>
-      </div>
+      <TabEditor
+        {tabs}
+        {activeTab}
+        {isEditing}
+        on:update={handleTabUpdate}
+      />
+
       <div class="actions">
-        <button class="action-button" on:click={toggleEdit}>
-          <i class="fas fa-edit"></i>
+        <button 
+          class="action-button"
+          on:click={toggleEdit}
+        >
+          <i class="fas fa-{isEditing ? 'save' : 'edit'}"></i>
         </button>
         <button class="action-button" on:click={disconnect}>
           <i class="fas fa-sign-out-alt"></i>

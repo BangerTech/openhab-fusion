@@ -104,76 +104,66 @@
   .switch-widget {
     width: 100%;
     height: 100%;
-    padding: 1rem;
+    padding: 1.2rem;
     border: none;
-    border-radius: 1.2rem;
-    background: rgba(38, 198, 218, 0.15);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.1);
     color: white;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
-  }
-
-  .switch-widget:disabled {
-    cursor: default;
-    opacity: 0.7;
-  }
-
-  .switch-widget:not(:disabled):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .widget-content {
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+  }
+
+  .widget-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
     gap: 1rem;
   }
 
   .widget-info {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 0.3rem;
   }
 
   .widget-label {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
     color: white;
   }
 
   .widget-state {
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.8);
-    opacity: 0.8;
-  }
-
-  .switch-button {
-    align-self: flex-start;
+    color: rgba(255, 255, 255, 0.6);
   }
 
   .switch-track {
-    width: 3.2rem;
-    height: 1.8rem;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 1rem;
+    width: 44px;
+    height: 26px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 13px;
     position: relative;
     transition: background 0.3s ease;
   }
 
   .switch-thumb {
-    width: 1.4rem;
-    height: 1.4rem;
+    width: 22px;
+    height: 22px;
     background: white;
     border-radius: 50%;
     position: absolute;
-    top: 0.2rem;
-    left: 0.2rem;
-    transition: transform 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .switch-widget.active {
+    background: rgba(38, 198, 218, 0.15);
   }
 
   .switch-widget.active .switch-track {
@@ -181,27 +171,11 @@
   }
 
   .switch-widget.active .switch-thumb {
-    transform: translateX(1.4rem);
+    transform: translateX(18px);
   }
 
-  /* Optional: Dunklerer Hintergrund für aktive Widgets */
-  .switch-widget.active {
-    background: rgba(38, 198, 218, 0.25);
-  }
-
-  /* Hover-Effekte */
-  .switch-widget:hover .switch-track {
-    opacity: 0.9;
-  }
-
-  .switch-widget:active .switch-thumb {
-    width: 1.6rem;
-    transform: translateX(1.3rem);
-  }
-
-  /* Editing-Zustand */
-  .switch-widget.editing {
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.05);
+  .switch-widget:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   }
 </style> 
