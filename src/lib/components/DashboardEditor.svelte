@@ -6,11 +6,6 @@
   
   // Widget-Komponenten importieren
   import SwitchWidget from './widgets/SwitchWidget.svelte';
-  import DimmerWidget from './widgets/DimmerWidget.svelte';
-  import NumberWidget from './widgets/NumberWidget.svelte';
-  import ChartWidget from './widgets/ChartWidget.svelte';
-  import CameraWidget from './widgets/CameraWidget.svelte';
-  import WeatherWidget from './widgets/WeatherWidget.svelte';
 
   declare global {
     interface Window {
@@ -202,8 +197,11 @@
   }
 
   function initializeWidget(element) {
+    if (!isEditing) return;
+
     interact(element)
       .draggable({
+        enabled: isEditing,
         inertia: true,
         modifiers: [
           interact.modifiers.snap({
@@ -225,6 +223,7 @@
         }
       })
       .resizable({
+        enabled: isEditing,
         edges: { left: true, right: true, bottom: true, top: true },
         modifiers: [
           interact.modifiers.snap({
@@ -425,7 +424,13 @@
         use:initializeWidget
       >
         {#if widget.type === 'switch'}
-          <SwitchWidget {widget} />
+          <SwitchWidget 
+            {widget} 
+            {isEditing} 
+            on:change={(event) => {
+              dispatch('itemChange', event.detail);
+            }}
+          />
         {:else}
           <div>Unsupported widget type: {widget.type}</div>
         {/if}
