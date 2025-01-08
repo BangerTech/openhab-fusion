@@ -1,76 +1,36 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import type { WidgetType } from '../types/widgets';
+  import { fade } from 'svelte/transition';
+  import { OPENHAB_TYPE_MAPPING } from '../types/widgets';
   
-  export let items: any[] = [];
-  let searchQuery = '';
-  let selectedType: WidgetType | 'all' = 'all';
+  export let items: any[];
+  export let widgetType: string;
   
   const dispatch = createEventDispatcher();
-
-  // Gruppiere Items nach Typ
-  $: groupedItems = items.reduce((acc, item) => {
-    const type = item.type.toLowerCase();
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(item);
-    return acc;
-  }, {});
-
-  // Filtere Items basierend auf Suche und Typ
-  $: filteredItems = items.filter(item => {
-    const matchesSearch = item.label?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = selectedType === 'all' || item.type.toLowerCase() === selectedType;
-    return matchesSearch && matchesType;
+  
+  // Filtere Items basierend auf dem Widget-Typ
+  $: compatibleItems = items.filter(item => {
+    const itemType = item.type.split(':')[0];
+    return OPENHAB_TYPE_MAPPING[itemType]?.includes(widgetType);
   });
-
-  function selectItem(item) {
-    dispatch('select', { item });
-  }
 </script>
 
-<div class="item-selector">
-  <div class="search-bar">
-    <i class="fas fa-search"></i>
-    <input 
-      type="text" 
-      bind:value={searchQuery}
-      placeholder="Suche nach Items..."
-    />
-  </div>
-
-  <div class="type-filter">
-    <button 
-      class:active={selectedType === 'all'}
-      on:click={() => selectedType = 'all'}
-    >
-      Alle
+<div class="item-selector" transition:fade>
+  <div class="selector-header">
+    <h3>Select Item for {widgetType}</h3>
+    <button class="close-button" on:click={() => dispatch('close')}>
+      <i class="fas fa-times"></i>
     </button>
-    {#each Object.keys(groupedItems) as type}
-      <button 
-        class:active={selectedType === type}
-        on:click={() => selectedType = type}
-      >
-        {type} ({groupedItems[type].length})
-      </button>
-    {/each}
   </div>
 
-  <div class="items-grid">
-    {#each filteredItems as item (item.name)}
+  <div class="items-list">
+    {#each compatibleItems as item}
       <button 
-        class="item-card"
-        on:click={() => selectItem(item)}
+        class="item-option"
+        on:click={() => dispatch('select', item)}
       >
-        <div class="item-icon">
-          <i class="fas fa-{getIconForType(item.type)}"></i>
-        </div>
         <div class="item-info">
-          <span class="item-label">{item.label || item.name}</span>
-          <span class="item-type">{item.type}</span>
-        </div>
-        <div class="item-state">
-          {formatState(item.state)}
+          <span class="item-name">{item.label || item.name}</span>
+          <span class="item-state">{item.state}</span>
         </div>
       </button>
     {/each}
@@ -79,114 +39,62 @@
 
 <style>
   .item-selector {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(44, 62, 80, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 1.5rem;
+    min-width: 400px;
+    max-width: 90vw;
+    max-height: 80vh;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    height: 100%;
-    background: #f5f5f5;
-    border-radius: 8px;
-    padding: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1100;
   }
 
-  .search-bar {
-    position: relative;
-  }
-
-  .search-bar i {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-  }
-
-  .search-bar input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-    background: white;
-  }
-
-  .type-filter {
+  .selector-header {
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .type-filter button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 20px;
-    background: white;
-    color: #666;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-  }
-
-  .type-filter button.active {
-    background: #0066cc;
-    color: white;
-  }
-
-  .items-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
+  .items-list {
     overflow-y: auto;
-    padding: 0.5rem;
-  }
-
-  .item-card {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: white;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-  }
-
-  .item-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  }
-
-  .item-icon {
-    width: 40px;
-    height: 40px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f5f5f5;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .item-option {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
     border-radius: 8px;
-    color: #666;
+    color: white;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+  }
+
+  .item-option:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
   }
 
   .item-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .item-label {
-    font-weight: 500;
-    color: #333;
-  }
-
-  .item-type {
-    font-size: 0.8rem;
-    color: #666;
+    gap: 0.3rem;
   }
 
   .item-state {
     font-size: 0.9rem;
-    color: #0066cc;
+    opacity: 0.7;
   }
 </style> 

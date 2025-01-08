@@ -14,6 +14,24 @@
 
   let loading = false;
 
+  function getItemIcon(type: string): string {
+    const iconMap: { [key: string]: string } = {
+      'Switch': 'toggle-on',
+      'Dimmer': 'lightbulb',
+      'Number': 'hashtag',
+      'String': 'font',
+      'Contact': 'door-open',
+      'DateTime': 'clock',
+      'Location': 'map-marker-alt',
+      'Color': 'palette',
+      'Image': 'image',
+      'Player': 'play-circle',
+      'Rollershutter': 'window-maximize',
+      'Temperature': 'thermometer-half'
+    };
+    return iconMap[type] || 'question-circle';
+  }
+
   async function updateState(newState: string) {
     try {
       loading = true;

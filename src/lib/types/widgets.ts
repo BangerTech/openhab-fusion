@@ -68,6 +68,54 @@ export const WIDGET_TEMPLATES: Record<string, WidgetTemplate> = {
     defaultSize: { w: 2, h: 2 },
     minSize: { w: 2, h: 1 },
     maxSize: { w: 4, h: 4 }
+  },
+  number: {
+    type: 'number',
+    variants: ['default', 'gauge', 'minimal'],
+    defaultSize: { w: 2, h: 2 },
+    minSize: { w: 1, h: 1 },
+    maxSize: { w: 4, h: 4 }
+  },
+  temperature: {
+    type: 'temperature',
+    variants: ['default', 'minimal'],
+    defaultSize: { w: 2, h: 1 },
+    minSize: { w: 1, h: 1 },
+    maxSize: { w: 4, h: 2 }
+  },
+  humidity: {
+    type: 'humidity',
+    variants: ['default', 'minimal'],
+    defaultSize: { w: 2, h: 1 },
+    minSize: { w: 1, h: 1 },
+    maxSize: { w: 4, h: 2 }
+  },
+  'media-player': {
+    type: 'media-player',
+    variants: ['default', 'minimal'],
+    defaultSize: { w: 4, h: 2 },
+    minSize: { w: 2, h: 2 },
+    maxSize: { w: 6, h: 4 }
+  },
+  camera: {
+    type: 'camera',
+    variants: ['default'],
+    defaultSize: { w: 4, h: 3 },
+    minSize: { w: 2, h: 2 },
+    maxSize: { w: 8, h: 6 }
+  },
+  chart: {
+    type: 'chart',
+    variants: ['line', 'bar'],
+    defaultSize: { w: 4, h: 3 },
+    minSize: { w: 2, h: 2 },
+    maxSize: { w: 8, h: 6 }
+  },
+  weather: {
+    type: 'weather',
+    variants: ['default', 'forecast'],
+    defaultSize: { w: 4, h: 2 },
+    minSize: { w: 2, h: 2 },
+    maxSize: { w: 6, h: 4 }
   }
-  // ... andere Widget-Typen
 }; 

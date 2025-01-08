@@ -3,6 +3,7 @@
   import type { DashboardItem } from '../types/dashboard';
   import { WidgetType, WIDGET_TEMPLATES } from '../types/widgets';
   import { onMount } from 'svelte';
+  import WidgetSetup from './WidgetSetup.svelte';
   
   // Widget-Komponenten importieren
   import SwitchWidget from './widgets/SwitchWidget.svelte';
@@ -303,31 +304,26 @@
       console.error('Error creating widget:', error);
     }
   }
+
+  let showingWidgetSetup = false;
+
+  function showWidgetSetup(type: string) {
+    selectedWidgetType = type;
+    showingWidgetSetup = true;
+  }
+
+  function handleWidgetSetup(event) {
+    const { widget } = event.detail;
+    dashboard = [...dashboard, widget];
+    showingWidgetSetup = false;
+    dispatch('update', { dashboard });
+  }
 </script>
 
 <div class="editor-container" class:editing={isEditing}>
-  {#if isEditing}
-    <div class="widget-palette">
-      <h3>Available Widgets</h3>
-      <div class="widget-templates">
-        {#each widgetTypes as widget}
-          <div 
-            class="widget-template"
-            data-type={widget.type}
-          >
-            <i class="fas fa-{widget.icon}"></i>
-            <span>{widget.label}</span>
-          </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
+  <div class="grid-container" class:editing={isEditing} bind:this={gridElement}>
+    <slot></slot>
 
-  <div 
-    class="grid-container"
-    class:editing={isEditing}
-    bind:this={gridElement}
-  >
     <div class="grid-background">
       {#each Array(50) as _, i}
         <div class="grid-line horizontal" style="top: {i * gridSize}px"></div>
@@ -335,17 +331,11 @@
       {/each}
     </div>
 
-    {#each dashboard as widget (widget.id)}
+    {#each dashboard as widget, i (widget.id)}
       <div 
         class="widget-item"
         class:editing={isEditing}
-        data-id={widget.id}
-        style="
-          transform: translate({widget.x * gridSize}px, {widget.y * gridSize}px);
-          width: {widget.w * gridSize}px;
-          height: {widget.h * gridSize}px;
-        "
-        use:initializeWidget
+        style="transform: translate({widget.x * gridSize}px, {widget.y * gridSize}px)"
       >
         {#if widget.type === 'switch'}
           <SwitchWidget {widget} {isEditing} />
@@ -413,11 +403,45 @@
   }
 
   .widget-palette {
+    position: fixed;
+    left: 0;
+    top: 80px;
     width: 250px;
-    background: #fff;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
     padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 1rem;
+  }
+
+  .widget-templates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .widget-template {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .widget-template:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+  }
+
+  .widget-template i {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
   }
 
   .grid-container {
@@ -729,5 +753,18 @@
     margin-top: 1rem;
     max-height: 60vh;
     overflow-y: auto;
+  }
+
+  .widget-setup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
   }
 </style> 

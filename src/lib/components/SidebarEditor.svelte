@@ -7,13 +7,6 @@
 
   const dispatch = createEventDispatcher();
 
-  const availableWidgets = [
-    { type: 'weather', name: 'Wetter' },
-    { type: 'system', name: 'System Info' },
-    { type: 'clock', name: 'Uhr' },
-    { type: 'calendar', name: 'Kalender' }
-  ];
-
   function addWidget(type: string) {
     const newWidget = {
       id: crypto.randomUUID(),
@@ -25,23 +18,6 @@
 </script>
 
 <div class="sidebar-editor" class:editing={isEditing}>
-  {#if isEditing}
-    <div class="widget-palette">
-      <h3>Verfügbare Widgets</h3>
-      <div class="widget-list">
-        {#each availableWidgets as widget}
-          <button 
-            class="widget-template"
-            on:click={() => addWidget(widget.type)}
-          >
-            <i class="fas fa-plus"></i>
-            <span>{widget.name}</span>
-          </button>
-        {/each}
-      </div>
-    </div>
-  {/if}
-  
   <div class="sidebar-content">
     <slot></slot>
   </div>
