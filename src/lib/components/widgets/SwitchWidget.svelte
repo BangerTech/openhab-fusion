@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import type { DashboardItem, DashboardItemData } from '../../types/dashboard';
-  import { connectionStore } from '../../stores/connection';
+  import { OpenHABService } from '../../services/openhab';
   
   export let widget: DashboardItem;
   export let isEditing = false;
@@ -11,6 +11,30 @@
   $: item = widget?.item;
   $: label = item ? (item.label || item.name) : 'Unnamed Switch';
   $: state = item?.state || 'OFF';
+
+  // Subscribe to OpenHAB events
+  onMount(() => {
+    const service = new OpenHABService('/api');
+    
+    const unsubscribe = service.subscribeToUpdates((event) => {
+      if (event.topic?.includes(item?.name)) {
+        if (item) {
+          try {
+            // Parse das JSON-Payload
+            const payload = JSON.parse(event.payload);
+            // Extrahiere den value
+            item.state = payload.value;
+          } catch (error) {
+            console.error('Failed to parse event payload:', error);
+          }
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  });
 
   async function toggleSwitch() {
     if (isEditing) return;
@@ -36,7 +60,6 @@
         item.state = newState;
       }
       
-      // Dispatch change event
       dispatch('change', {
         itemName: item.name,
         newState
@@ -56,6 +79,7 @@
 <button 
   class="switch-widget" 
   class:editing={isEditing}
+  class:active={state === 'ON'}
   on:click={toggleSwitch}
   on:keydown={handleKeyDown}
   disabled={isEditing}
@@ -63,12 +87,15 @@
   role="switch"
   aria-checked={state === 'ON'}
 >
-  <div class="widget-header">
-    <span class="widget-label">{label}</span>
-  </div>
   <div class="widget-content">
-    <div class="switch-state" class:active={state === 'ON'}>
-      {state}
+    <div class="widget-info">
+      <span class="widget-label">{label}</span>
+      <span class="widget-state">{state}</span>
+    </div>
+    <div class="switch-button">
+      <div class="switch-track">
+        <div class="switch-thumb"></div>
+      </div>
     </div>
   </div>
 </button>
@@ -77,48 +104,103 @@
   .switch-widget {
     width: 100%;
     height: 100%;
-    padding: 0.5rem;
-    display: flex;
-    flex-direction: column;
+    padding: 1rem;
     border: none;
+    border-radius: 1.2rem;
     background: white;
     cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
   }
 
   .switch-widget:disabled {
     cursor: default;
-    pointer-events: none;
+    opacity: 0.7;
   }
 
   .switch-widget:not(:disabled):hover {
-    background: #f5f5f5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  .widget-header {
-    margin-bottom: 0.5rem;
+  .widget-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .widget-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
   }
 
   .widget-label {
+    font-size: 1rem;
     font-weight: 500;
     color: #2c3e50;
   }
 
-  .widget-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .switch-state {
-    padding: 0.5rem 1rem;
-    border-radius: 1rem;
-    background: #f0f0f0;
+  .widget-state {
+    font-size: 0.8rem;
     color: #666;
+    opacity: 0.8;
   }
 
-  .switch-state.active {
+  .switch-button {
+    align-self: flex-start;
+  }
+
+  .switch-track {
+    width: 3.2rem;
+    height: 1.8rem;
+    background: #e0e0e0;
+    border-radius: 1rem;
+    position: relative;
+    transition: background 0.3s ease;
+  }
+
+  .switch-thumb {
+    width: 1.4rem;
+    height: 1.4rem;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 0.2rem;
+    left: 0.2rem;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .switch-widget.active .switch-track {
     background: #4CAF50;
-    color: white;
+  }
+
+  .switch-widget.active .switch-thumb {
+    transform: translateX(1.4rem);
+  }
+
+  /* Optional: Dunklerer Hintergrund für aktive Widgets */
+  .switch-widget.active {
+    background: #f8fff8;
+  }
+
+  /* Hover-Effekte */
+  .switch-widget:hover .switch-track {
+    opacity: 0.9;
+  }
+
+  .switch-widget:active .switch-thumb {
+    width: 1.6rem;
+    transform: translateX(1.3rem);
+  }
+
+  /* Editing-Zustand */
+  .switch-widget.editing {
+    border: 2px dashed #ccc;
+    background: #fafafa;
   }
 </style> 
