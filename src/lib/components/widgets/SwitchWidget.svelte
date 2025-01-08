@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { DashboardItem, DashboardItemData } from '../../types/dashboard';
+  import { connectionStore } from '../../stores/connection';
   
   export let widget: DashboardItem;
   export let isEditing = false;
@@ -11,14 +12,38 @@
   $: label = item ? (item.label || item.name) : 'Unnamed Switch';
   $: state = item?.state || 'OFF';
 
-  function toggleSwitch() {
+  async function toggleSwitch() {
     if (isEditing) return;
     
     const newState = state === 'ON' ? 'OFF' : 'ON';
-    dispatch('change', {
-      itemName: item.name,
-      newState
-    });
+    
+    try {
+      const response = await fetch(`/api/rest/items/${item.name}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+          'Accept': 'application/json'
+        },
+        body: newState
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Update local state
+      if (item) {
+        item.state = newState;
+      }
+      
+      // Dispatch change event
+      dispatch('change', {
+        itemName: item.name,
+        newState
+      });
+    } catch (error) {
+      console.error('Failed to update switch state:', error);
+    }
   }
 
   function handleKeyDown(event: KeyboardEvent) {

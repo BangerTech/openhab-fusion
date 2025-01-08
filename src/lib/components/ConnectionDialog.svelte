@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { OpenHABService } from '../services/openhab';
+  import { connectionStore } from '../stores/connection';
 
   export let initialUrl = '';
   const dispatch = createEventDispatcher();
@@ -14,21 +15,24 @@
       error = 'Please enter an OpenHAB URL';
       return;
     }
-
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = `http://${url}`;
-    }
     
-    url = url.replace(/\/$/, '');
     connecting = true;
     error = '';
 
     try {
+      // Erstelle einen neuen OpenHAB Service mit dem Proxy-Pfad
       const service = new OpenHABService('/api');
       await service.testConnection();
+
+      // Speichere die Original-URL im Store für spätere Verwendung
+      connectionStore.set({
+        url: '/api',  // Wir verwenden den Proxy-Pfad
+        connected: true
+      });
+
       dispatch('connected', { service, url });
     } catch (err) {
-      error = `Connection error: ${err.message}`;
+      error = 'Connection failed. Please check the URL and try again.';
       console.error('Connection error:', err);
     } finally {
       connecting = false;
