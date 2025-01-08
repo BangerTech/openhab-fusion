@@ -9,12 +9,19 @@
     "checkJs": true,
     "isolatedModules": true,
     "moduleResolution": "node",
-    "types": ["vite/client", "node"],
+    "types": [
+      "node",
+      "vite/client"
+    ],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.svelte"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 } 

@@ -137,6 +137,7 @@
   }
 
   function handleWidgetSelect(event) {
+    console.log('Widget selected:', event.detail);
     const widget = event.detail;
     const newWidget = {
       id: generateUUID(),
@@ -190,6 +191,7 @@
 
   function handlePlaceholderClick() {
     showWidgetSelector = true;
+    console.log('Opening widget selector');
   }
 </script>
 

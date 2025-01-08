@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
+  import { createEventDispatcher } from 'svelte';
   import { OPENHAB_TYPE_MAPPING } from '../types/widgets';
   
   export let items: any[];
@@ -11,6 +12,10 @@
   $: compatibleItems = items.filter(item => {
     const itemType = item.type.split(':')[0];
     return OPENHAB_TYPE_MAPPING[itemType]?.includes(widgetType);
+  }).sort((a, b) => {
+    const labelA = a.label || a.name;
+    const labelB = b.label || b.name;
+    return labelA.localeCompare(labelB);
   });
 </script>
 

@@ -40,16 +40,16 @@
 
 <div class="widget-setup-overlay">
   <div class="widget-setup">
-    <h3>Widget Einrichten: {selectedWidgetType}</h3>
+    <h3>Configure Widget: {selectedWidgetType}</h3>
     
     <div class="setup-form">
       <div class="form-group">
-        <label for="item-select">Item auswählen</label>
+        <label for="item-select">Select Item</label>
         <select 
           id="item-select"
           bind:value={selectedItem}
         >
-          <option value={null}>Bitte wählen...</option>
+          <option value={null}>Please select...</option>
           {#each items as item}
             <option value={item}>{item.label || item.name}</option>
           {/each}
@@ -58,12 +58,8 @@
 
       {#if template?.variants.length > 1}
         <div class="form-group">
-          <label id="variant-label">Widget-Variante</label>
-          <div 
-            class="variant-options"
-            role="radiogroup"
-            aria-labelledby="variant-label"
-          >
+          <label id="variant-label">Widget Variant</label>
+          <div class="variant-options">
             {#each template.variants as variant}
               <button 
                 class="variant-option" 
@@ -78,10 +74,10 @@
       {/if}
 
       <div class="form-group">
-        <label for="width-input">Größe</label>
+        <label for="width-input">Size</label>
         <div class="size-inputs">
           <div class="size-input">
-            <span>Breite</span>
+            <span>Width</span>
             <input 
               id="width-input"
               type="number" 
@@ -91,7 +87,7 @@
             >
           </div>
           <div class="size-input">
-            <span>Höhe</span>
+            <span>Height</span>
             <input 
               type="number" 
               bind:value={widgetSize.h}
@@ -103,15 +99,13 @@
       </div>
 
       <div class="button-group">
-        <button class="cancel-button" on:click={handleCancel}>
-          Abbrechen
-        </button>
+        <button class="cancel-button" on:click={handleCancel}>Cancel</button>
         <button 
           class="save-button" 
           on:click={handleSave}
           disabled={!selectedItem}
         >
-          Widget Hinzufügen
+          Add Widget
         </button>
       </div>
     </div>

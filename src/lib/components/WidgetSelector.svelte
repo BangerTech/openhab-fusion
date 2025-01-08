@@ -74,6 +74,13 @@
 </script>
 
 <div class="widget-selector" transition:fade>
+  <div class="selector-header">
+    <h3>Select Widget Type</h3>
+    <button class="close-button" on:click={() => dispatch('close')}>
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
   <div class="categories">
     {#each categories as category}
       <button 

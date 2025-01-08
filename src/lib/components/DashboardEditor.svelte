@@ -116,11 +116,10 @@
   }
 
   function initializeWidget(element) {
-    if (!isEditing) return;
+    if (!isEditing || !interact) return;
 
     interact(element)
       .draggable({
-        enabled: isEditing,
         inertia: true,
         modifiers: [
           interact.modifiers.snap({
@@ -141,19 +140,12 @@
         }
       })
       .resizable({
-        enabled: isEditing,
         edges: { left: true, right: true, bottom: true, top: true },
-        invert: 'none',
-        preserveAspectRatio: false,
         modifiers: [
           interact.modifiers.snap({
             targets: [
               interact.snappers.grid({ x: gridSize, y: gridSize })
             ]
-          }),
-          interact.modifiers.restrict({
-            restriction: 'parent',
-            elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
           })
         ],
         listeners: {
@@ -196,14 +188,9 @@
     const x = parseFloat(target.getAttribute('data-x')) || 0;
     const y = parseFloat(target.getAttribute('data-y')) || 0;
     
-    const newX = Math.round(x / gridSize);
-    const newY = Math.round(y / gridSize);
-    
-    if (newX >= 0 && newY >= 0) {
-      dashboard[index].x = newX;
-      dashboard[index].y = newY;
-      dispatch('update', { dashboard: [...dashboard] });
-    }
+    dashboard[index].x = Math.round(x / gridSize);
+    dashboard[index].y = Math.round(y / gridSize);
+    dispatch('update', { dashboard: [...dashboard] });
   }
 
   function updateWidgetSize(target) {
@@ -213,11 +200,8 @@
     const width = parseFloat(target.style.width);
     const height = parseFloat(target.style.height);
     
-    const newW = Math.max(1, Math.round(width / gridSize));
-    const newH = Math.max(1, Math.round(height / gridSize));
-    
-    dashboard[index].w = newW;
-    dashboard[index].h = newH;
+    dashboard[index].w = Math.max(1, Math.round(width / gridSize));
+    dashboard[index].h = Math.max(1, Math.round(height / gridSize));
     dispatch('update', { dashboard: [...dashboard] });
   }
 
@@ -335,31 +319,23 @@
       <div 
         class="widget-item"
         class:editing={isEditing}
-        style="transform: translate({widget.x * gridSize}px, {widget.y * gridSize}px)"
+        data-id={widget.id}
+        data-index={i}
+        style="
+          transform: translate({widget.x * gridSize}px, {widget.y * gridSize}px);
+          width: {widget.w * gridSize}px;
+          height: {widget.h * gridSize}px;
+        "
+        use:initializeWidget
       >
-        {#if widget.type === 'switch'}
-          <SwitchWidget {widget} {isEditing} />
-        {:else if widget.type === 'dimmer'}
-          <DimmerWidget {widget} {isEditing} />
-        {:else if widget.type === 'number'}
-          <SensorWidget {widget} {isEditing} />
-        {:else}
-          <div>Unsupported widget type: {widget.type}</div>
-        {/if}
-        
         {#if isEditing}
           <div class="widget-controls">
-            <button class="config-button" on:click={() => editingWidget = widget}>
-              <i class="fas fa-cog"></i>
-            </button>
-            <button class="delete-button" on:click={() => {
-              dashboard = dashboard.filter(w => w.id !== widget.id);
-              dispatch('update', { dashboard });
-            }}>
-              <i class="fas fa-trash"></i>
+            <button class="resize-handle" title="Resize">
+              <i class="fas fa-arrows-alt"></i>
             </button>
           </div>
         {/if}
+        <!-- Widget content -->
       </div>
     {/each}
   </div>
@@ -490,13 +466,19 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s, width 0.2s, height 0.2s;
+    transition: transform 0.2s;
+    touch-action: none;
   }
 
   .widget-item.editing {
     cursor: move;
-    user-select: none;
-    touch-action: none;
+    border: 2px solid rgba(38, 198, 218, 0.5);
+    box-shadow: 0 2px 8px rgba(38, 198, 218, 0.2);
+  }
+
+  .widget-item.editing:hover {
+    border-color: rgba(38, 198, 218, 0.8);
+    box-shadow: 0 4px 12px rgba(38, 198, 218, 0.3);
   }
 
   .widget-controls {
@@ -508,29 +490,19 @@
     z-index: 10;
   }
 
-  .widget-template {
-    cursor: move;
-    padding: 12px;
-    margin: 8px;
-    background-color: #ffffff;
-    border: 2px solid #007bff;
-    border-radius: 6px;
-    transition: all 0.2s;
+  .resize-handle {
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    cursor: se-resize;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #666;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    opacity: 1;
-    -webkit-user-drag: none;
-    -webkit-user-select: none;
-    user-select: none;
-    touch-action: none;
-  }
-
-  .widget-template:hover {
-    background-color: #f0f8ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
 
   .widget-ghost {
