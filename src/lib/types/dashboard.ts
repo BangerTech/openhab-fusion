@@ -1,14 +1,19 @@
+export interface DashboardItemData {
+  name: string;
+  label: string;
+  type: string;
+  state: string | null;
+}
+
 export interface DashboardItem {
   id: string;
-  type: string;
-  item: string;
+  type: WidgetType;
   x: number;
   y: number;
   w: number;
   h: number;
-  title?: string;
-  icon?: string;
-  options?: Record<string, any>;
+  item: DashboardItemData | null;
+  options: Record<string, any>;
 }
 
 export interface Dashboard {

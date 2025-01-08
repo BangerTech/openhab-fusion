@@ -3,6 +3,14 @@
   import type { DashboardItem } from '../types/dashboard';
   import type { WidgetType } from '../types/widgets';
   import { onMount } from 'svelte';
+  
+  // Widget-Komponenten importieren
+  import SwitchWidget from './widgets/SwitchWidget.svelte';
+  import DimmerWidget from './widgets/DimmerWidget.svelte';
+  import NumberWidget from './widgets/NumberWidget.svelte';
+  import ChartWidget from './widgets/ChartWidget.svelte';
+  import CameraWidget from './widgets/CameraWidget.svelte';
+  import WeatherWidget from './widgets/WeatherWidget.svelte';
 
   declare global {
     interface Window {
@@ -28,6 +36,9 @@
     label?: string;
     type: string;
     state?: string;
+    link?: string;
+    metadata?: any;
+    editable?: boolean;
   }
 
   export let items: OpenHABItem[] = [];
@@ -38,6 +49,7 @@
   let editingWidget: DashboardItem | null = null;
   let gridElement: HTMLElement;
   let gridSize = 20;
+  let currentNewWidget: DashboardItem | null = null;
 
   // Definieren Sie zuerst einen Typ für die Widget-Templates
   type WidgetTemplate = {
@@ -122,9 +134,9 @@
           const x = Math.floor((event.dragEvent.clientX - rect.left) / gridSize);
           const y = Math.floor((event.dragEvent.clientY - rect.top) / gridSize);
 
-          const newWidget: DashboardItem = {
+          currentNewWidget = {
             id: `widget-${Date.now()}`,
-            type: type as WidgetType, // Type-Cast hier
+            type: type as WidgetType,
             x,
             y,
             w: template.minW,
@@ -133,10 +145,8 @@
             options: {}
           };
 
-          console.log('Creating widget:', { type, template, newWidget });
-          dashboard = [...dashboard, newWidget];
-          dispatch('update', { dashboard });
-          showItemSelector(type);
+          console.log('Creating widget:', { type, template, newWidget: currentNewWidget });
+          showItemSelector(type as WidgetType);
         }
       });
 
@@ -330,42 +340,45 @@
   function showItemSelector(widgetType: WidgetType) {
     console.log('Showing item selector for widget type:', widgetType);
     selectedWidgetType = widgetType;
-    
-    const compatibleItems = items.filter(item => {
-      if (!item || !item.type) {
-        console.warn('Invalid item:', item);
-        return false;
-      }
-      
-      const mappedType = mapOpenHABTypeToWidgetType(item.type);
-      const isCompatible = mappedType === widgetType.toLowerCase();
-      
-      console.log('Item type check:', {
-        item: item.name,
-        originalType: item.type,
-        mappedType,
-        widgetType: widgetType.toLowerCase(),
-        isCompatible
-      });
-      
-      return isCompatible;
-    });
-
-    console.log('Compatible items:', compatibleItems);
     showingItemSelector = true;
   }
 
   function selectItem(item: OpenHABItem) {
-    console.log('Selecting item:', item);
-    const widget = dashboard[dashboard.length - 1];
-    if (widget) {
-      widget.item = item.name;
-      console.log('Updated widget:', widget);
-      dispatch('update', { dashboard: [...dashboard] });
-    } else {
-      console.error('No widget found to update');
+    if (!item) {
+      console.error('No item selected');
+      return;
     }
-    showingItemSelector = false;
+    if (!currentNewWidget) {
+      console.error('No widget being created');
+      return;
+    }
+
+    console.log('Selected item:', item);
+    
+    // Sicherstellen dass alle erforderlichen Eigenschaften vorhanden sind
+    const itemData: DashboardItemData = {
+      name: item.name,
+      label: item.label || item.name,
+      type: item.type,
+      state: item.state || null
+    };
+    
+    const newWidget: DashboardItem = {
+      ...currentNewWidget,
+      item: itemData
+    };
+
+    console.log('Creating new widget:', newWidget);
+    
+    // Aktualisieren Sie das Dashboard in einem try-catch Block
+    try {
+      dashboard = [...dashboard, newWidget];
+      showingItemSelector = false;
+      currentNewWidget = null;
+      dispatch('update', { dashboard });
+    } catch (error) {
+      console.error('Error creating widget:', error);
+    }
   }
 </script>
 
@@ -409,8 +422,13 @@
           width: {widget.w * gridSize}px;
           height: {widget.h * gridSize}px;
         "
+        use:initializeWidget
       >
-        <slot name="widget" {widget} />
+        {#if widget.type === 'switch'}
+          <SwitchWidget {widget} />
+        {:else}
+          <div>Unsupported widget type: {widget.type}</div>
+        {/if}
         
         {#if isEditing}
           <div class="widget-controls">
@@ -432,19 +450,14 @@
 
 {#if showingItemSelector}
   <div class="item-selector-modal">
-    <button 
-      class="modal-overlay"
-      on:click={() => showingItemSelector = false}
-      on:keydown={(e) => e.key === 'Escape' && (showingItemSelector = false)}
-      aria-label="Close modal"
-    ></button>
     <div class="modal-content" role="dialog" aria-modal="true">
       <h3>Select Item for {selectedWidgetType}</h3>
       <div class="items-list">
         {#each items.filter(item => {
+          if (!item?.type) return false;
           const mappedType = mapOpenHABTypeToWidgetType(item.type);
           return mappedType === selectedWidgetType.toLowerCase();
-        }) as item (item.name)}
+        }).sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name)) as item (item.name)}
           <button 
             class="item-option"
             on:click={() => selectItem(item)}
@@ -458,6 +471,9 @@
           </button>
         {/each}
       </div>
+      <button class="close-button" on:click={() => showingItemSelector = false}>
+        Cancel
+      </button>
     </div>
   </div>
 {/if}
