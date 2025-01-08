@@ -35,15 +35,22 @@
 </script>
 
 <div class="item-card" class:loading>
-  <h3>{item.label}</h3>
-  <p>Status: {item.state}</p>
+  <div class="item-icon">
+    <i class="fas fa-{getItemIcon(item.type)}"></i>
+  </div>
+  <div class="item-content">
+    <h3>{item.label}</h3>
+    <p class="state">{item.state}</p>
+  </div>
   
   {#if item.type === 'Switch'}
     <button 
+      class="toggle-button"
+      class:active={item.state === 'ON'}
       on:click={() => updateState(item.state === 'ON' ? 'OFF' : 'ON')}
       disabled={loading}
     >
-      {item.state === 'ON' ? 'Ausschalten' : 'Einschalten'}
+      <span class="toggle-slider"></span>
     </button>
   {:else if item.type === 'Dimmer'}
     <input 
@@ -59,27 +66,88 @@
 
 <style>
   .item-card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .loading {
-    opacity: 0.7;
-    pointer-events: none;
-  }
-
-  button {
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    border: none;
-    background: #0066cc;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     color: white;
-    cursor: pointer;
+    transition: transform 0.2s;
   }
 
-  button:hover {
-    background: #0052a3;
+  .item-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .item-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+
+  .item-content {
+    flex: 1;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+
+  .state {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
+  }
+
+  .toggle-button {
+    width: 50px;
+    height: 26px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 13px;
+    position: relative;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .toggle-button.active .toggle-slider {
+    transform: translateX(24px);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
   }
 </style> 

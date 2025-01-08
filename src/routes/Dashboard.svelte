@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { navigate } from 'svelte-routing';
   import { openhabService, items } from '../lib/stores';
-  import DashboardLayout from '../lib/components/DashboardLayout.svelte';
   import DashboardEditor from '../lib/components/DashboardEditor.svelte';
   import OpenHABItem from '../lib/components/OpenHABItem.svelte';
 
@@ -36,40 +35,6 @@
     navigate('/connect');
   }
 
-  // Compute sections based on dashboard items
-  $: sections = [
-    {
-      title: 'Lighting',
-      items: dashboard.filter(item => {
-        const foundItem = $items.find(i => i.name === item.item);
-        return foundItem?.type === 'Switch' || foundItem?.type === 'Dimmer';
-      })
-    },
-    {
-      title: 'Climate',
-      items: dashboard.filter(item => {
-        const foundItem = $items.find(i => i.name === item.item);
-        return foundItem?.tags?.includes('Temperature');
-      })
-    },
-    {
-      title: 'Media',
-      items: dashboard.filter(item => {
-        const foundItem = $items.find(i => i.name === item.item);
-        return foundItem?.tags?.includes('Media');
-      })
-    },
-    {
-      title: 'Other',
-      items: dashboard.filter(item => {
-        const foundItem = $items.find(i => i.name === item.item);
-        return !foundItem?.tags?.some(tag => 
-          ['Temperature', 'Media'].includes(tag)
-        );
-      })
-    }
-  ];
-
   function toggleEdit() {
     isEditing = !isEditing;
     if (!isEditing) {
@@ -79,13 +44,63 @@
 </script>
 
 <div class="dashboard">
-  <DashboardLayout 
-    {sections}
-    {isEditing}
-    onEdit={toggleEdit}
-    onSave={toggleEdit}
-    {disconnect}
-  >
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="time">{new Date().toLocaleTimeString()}</div>
+      <div class="date">
+        {new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+      </div>
+      <div class="weather">
+        2°C
+        <span class="humidity">81%</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <button class="nav-item active">
+        <i class="fas fa-home"></i>
+        Hemma
+      </button>
+      <button class="nav-item">
+        <i class="fas fa-shapes"></i>
+        Entities
+      </button>
+    </nav>
+
+    <div class="system-info">
+      <div class="info-item">
+        <span>CPU</span>
+        <div class="progress-bar">
+          <div class="progress" style="width: 15%"></div>
+        </div>
+        <span>15%</span>
+      </div>
+      <div class="info-item">
+        <span>RAM</span>
+        <div class="progress-bar">
+          <div class="progress" style="width: 22%"></div>
+        </div>
+        <span>22%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="header">
+      <div class="tabs">
+        <button class="tab active">Hemma</button>
+        <button class="tab">Entities</button>
+      </div>
+      <div class="actions">
+        <button class="action-button" on:click={toggleEdit}>
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-button" on:click={disconnect}>
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+
     <div class="dashboard-content">
       <DashboardEditor
         items={$items}
@@ -102,18 +117,168 @@
         </svelte:fragment>
       </DashboardEditor>
     </div>
-  </DashboardLayout>
+  </div>
 </div>
 
 <style>
   .dashboard {
+    display: flex;
     height: 100vh;
+    background: linear-gradient(135deg, #0288d1, #26c6da);
+    color: white;
+  }
+
+  .sidebar {
+    width: 300px;
+    background: rgba(0, 40, 60, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .sidebar-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .time {
+    font-size: 3rem;
+    font-weight: 300;
+  }
+
+  .date {
+    font-size: 1.2rem;
+    opacity: 0.8;
+  }
+
+  .weather {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+  }
+
+  .humidity {
+    opacity: 0.8;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+  }
+
+  .nav-item:hover,
+  .nav-item.active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .system-info {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .info-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+
+  .progress {
+    height: 100%;
+    background: white;
+    border-radius: 2px;
+  }
+
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
 
+  .header {
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 40, 60, 0.1);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .tab {
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    opacity: 0.7;
+    transition: all 0.2s;
+  }
+
+  .tab:hover,
+  .tab.active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .action-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+  }
+
+  .action-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
   .dashboard-content {
-    height: 100%;
+    flex: 1;
     overflow: auto;
-    padding: 1rem;
+    padding: 2rem;
   }
 </style> 
