@@ -53,11 +53,15 @@
             const type = event.target.getAttribute('data-type');
             const template = widgetTypes.find(w => w.type === type);
             
-            // Create ghost element
+            // Create ghost element with better visibility
             const ghost = document.createElement('div');
             ghost.className = 'widget-ghost';
             ghost.style.width = `${template.minW * gridSize}px`;
             ghost.style.height = `${template.minH * gridSize}px`;
+            ghost.style.backgroundColor = 'rgba(0, 123, 255, 0.3)'; // Bessere Sichtbarkeit
+            ghost.style.border = '2px dashed #007bff';
+            ghost.style.position = 'fixed'; // Wichtig für korrekte Positionierung
+            ghost.style.pointerEvents = 'none'; // Verhindert Interferenz mit Drop
             document.body.appendChild(ghost);
             
             event.target.ghost = ghost;
@@ -66,21 +70,37 @@
             const { ghost } = event.target;
             const { pageX, pageY } = event;
             
-            ghost.style.transform = `translate(${pageX}px, ${pageY}px)`;
+            // Offset für bessere Positionierung
+            ghost.style.transform = `translate(${pageX - ghost.offsetWidth/2}px, ${pageY - ghost.offsetHeight/2}px)`;
           },
           end: (event) => {
             const type = event.target.getAttribute('data-type');
             const { ghost } = event.target;
             const { pageX, pageY } = event;
             
-            // Calculate grid position
+            // Calculate grid position relative to grid
             const rect = gridElement.getBoundingClientRect();
-            const x = Math.round((pageX - rect.left) / gridSize);
-            const y = Math.round((pageY - rect.top) / gridSize);
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
+            const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+            
+            const x = Math.floor((pageX + scrollLeft - rect.left) / gridSize);
+            const y = Math.floor((pageY + scrollTop - rect.top) / gridSize);
             
             // Add widget if dropped in valid area
-            if (x >= 0 && y >= 0) {
-              addWidget(type, x, y);
+            if (x >= 0 && y >= 0 && x < rect.width/gridSize && y < rect.height/gridSize) {
+              const template = widgetTypes.find(w => w.type === type);
+              const newWidget = {
+                id: `widget-${Date.now()}`,
+                type: type,
+                x: x,
+                y: y,
+                w: template.minW,
+                h: template.minH,
+                item: null
+              };
+              
+              dashboard = [...dashboard, newWidget];
+              dispatch('update', { dashboard });
               showItemSelector(type);
             }
             
@@ -496,5 +516,57 @@
 
   .grid-container.editing {
     background: rgba(255,255,255,0.1);
+  }
+
+  .widget-template {
+    cursor: move;
+    padding: 10px;
+    margin: 5px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+
+  .widget-template:hover {
+    background-color: #e9ecef;
+  }
+
+  .widget-item {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: box-shadow 0.3s;
+  }
+
+  .widget-item.editing {
+    border: 2px solid #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+    cursor: move;
+  }
+
+  .widget-item.editing:hover {
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+  }
+
+  .widget-controls {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    gap: 5px;
+  }
+
+  .widget-controls button {
+    padding: 4px 8px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .widget-controls button:hover {
+    background-color: #f8f9fa;
   }
 </style> 
