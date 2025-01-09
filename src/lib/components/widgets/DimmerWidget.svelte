@@ -1,11 +1,16 @@
 <script lang="ts">
-  export let widget;
+  export let widget: any;
   export let isEditing = false;
   export let demo = false;
   export let service = undefined;
 
   let value = parseInt(widget.item?.state || '0');
   let isDragging = false;
+
+  $: title = widget.options?.title || widget.item?.label || 'Dimmer';
+  $: showIcon = widget.options?.showIcon ?? true;
+  $: showState = widget.options?.showState ?? true;
+  $: iconColor = widget.options?.color || '#ffffff';
 
   async function updateValue(newValue: number) {
     if (demo) return;
@@ -25,11 +30,12 @@
 </script>
 
 <div class="dimmer-widget" class:editing={isEditing}>
-  <div class="widget-header">
-    <i class="fas fa-lightbulb"></i>
-    <span class="label">{widget.item?.label || 'Dimmer'}</span>
-    <div class="brightness">{value}%</div>
-  </div>
+  {#if showIcon}
+    <div class="icon" style="color: {iconColor}">
+      <i class="fas fa-lightbulb"></i>
+    </div>
+  {/if}
+  <div class="name">{title}</div>
 
   <div class="slider-container">
     <div class="slider-track" style="--value: {value}%">

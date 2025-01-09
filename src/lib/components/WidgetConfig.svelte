@@ -14,12 +14,16 @@
     ...widget.options
   };
 
-  function updateWidget() {
+  function saveChanges() {
+    console.log('Current config:', config);
+    console.log('Current widget:', widget);
     const updatedWidget = {
       ...widget,
-      options: config
+      options: { ...config }
     };
+    console.log('Saving widget config:', updatedWidget);
     dispatch('update', updatedWidget);
+    dispatch('close');
   }
 </script>
 
@@ -38,7 +42,6 @@
         type="text" 
         id="title" 
         bind:value={config.title}
-        on:change={updateWidget}
         placeholder="Enter widget title"
       />
     </div>
@@ -51,7 +54,6 @@
           id="icon" 
           bind:value={config.icon}
           placeholder="fas fa-lightbulb"
-          on:change={updateWidget}
         />
         {#if config.icon}
           <div class="icon-preview">
@@ -68,7 +70,6 @@
           type="color" 
           id="color" 
           bind:value={config.color}
-          on:change={updateWidget}
         />
         <span class="color-value">{config.color}</span>
       </div>
@@ -79,7 +80,6 @@
         <input 
           type="checkbox" 
           bind:checked={config.showIcon}
-          on:change={updateWidget}
         />
         <span class="checkbox-text">Show Icon</span>
       </label>
@@ -88,10 +88,16 @@
         <input 
           type="checkbox" 
           bind:checked={config.showState}
-          on:change={updateWidget}
         />
         <span class="checkbox-text">Show State</span>
       </label>
+    </div>
+
+    <div class="actions">
+      <button class="save-button" on:click={saveChanges}>
+        <i class="fas fa-save"></i>
+        Save Changes
+      </button>
     </div>
   </div>
 </div>
@@ -243,5 +249,30 @@
 
   ::placeholder {
     color: rgba(255, 255, 255, 0.4);
+  }
+
+  .actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .save-button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .save-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 </style> 

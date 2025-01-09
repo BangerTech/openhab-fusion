@@ -39,9 +39,10 @@ Beautiful widgets for all your smart home controls.
 ### Quick Start
 1. Download the latest release
 2. Extract the files to your web server
-3. Open the web interface
-4. Connect to your OpenHAB instance
-5. Start customizing your dashboard!
+3. docker compose up --build
+4. Open the web interface on http://localhost:5050
+5. Connect to your OpenHAB instance
+6. Start customizing your dashboard!
 
 
 ## 🧩 Widgets

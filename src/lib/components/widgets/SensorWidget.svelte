@@ -2,9 +2,14 @@
   export let widget: any;
   export let item: any;
   export let isEditing = false;
+  export let demo = false;
 
   $: value = item?.state || '0';
   $: unit = widget?.options?.unit || '';
+  $: title = widget.options?.title || widget.item?.label || 'Sensor';
+  $: showIcon = widget.options?.showIcon ?? true;
+  $: showState = widget.options?.showState ?? true;
+  $: iconColor = widget.options?.color || '#ffffff';
 
   function getIcon(type: string): string {
     const typeMap = {

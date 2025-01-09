@@ -59,11 +59,14 @@
 
   function handleDashboardUpdate(event) {
     const updatedWidgets = event.detail.dashboard;
-    dashboard = {
-      ...dashboard,
-      [activeTab]: updatedWidgets
-    };
-    saveDashboard();
+    console.log('Updating dashboard with:', updatedWidgets);
+    const newDashboard = { ...dashboard };
+    newDashboard[activeTab] = [...updatedWidgets];
+    dashboard = newDashboard;
+    setTimeout(() => {
+      saveDashboard();
+    }, 0);
+    console.log('Dashboard after update:', dashboard);
   }
 
   function disconnect() {

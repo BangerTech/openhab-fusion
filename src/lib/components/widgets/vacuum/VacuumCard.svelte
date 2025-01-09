@@ -4,6 +4,11 @@
   export let isEditing = false;
   export let demo = false;
 
+  $: title = widget.options?.title || widget.item?.label || 'Vacuum';
+  $: showIcon = widget.options?.showIcon ?? true;
+  $: showState = widget.options?.showState ?? true;
+  $: iconColor = widget.options?.color || '#ffffff';
+
   let status = widget.item?.state || 'docked';
   let battery = parseInt(widget.item?.battery || '100');
   let area = widget.item?.area || '0';
@@ -23,7 +28,15 @@
 
 <div class="vacuum-card" class:editing={isEditing}>
   <div class="header">
-    <span class="name">{widget.item?.name || 'Vacuum'}</span>
+    {#if showIcon}
+      <div class="icon" style="color: {iconColor}">
+        <i class="fas fa-robot"></i>
+      </div>
+    {/if}
+    <div class="name">{title}</div>
+    {#if showState}
+      <div class="state">{status}</div>
+    {/if}
     <div class="battery" style="--battery-level: {battery}%">
       <i class="fas fa-battery-{Math.ceil(battery/25)*25}"></i>
       {battery}%

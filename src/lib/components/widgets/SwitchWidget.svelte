@@ -3,17 +3,29 @@
   import type { DashboardItem, DashboardItemData } from '../../types/dashboard';
   import { OpenHABService } from '../../services/openhab';
   
-  export let widget: DashboardItem;
+  export let widget: any;
   export let isEditing = false;
   export let demo = false;
   export let service: OpenHABService;
+  export let key: number | undefined = undefined;
   
   const dispatch = createEventDispatcher();
   
+  // Reaktive Deklarationen für Widget-Optionen
+  $: {
+    console.log('Widget received:', widget);
+    console.log('Widget options:', widget.options);
+  }
+  
+  $: options = widget.options ?? {};
+  $: title = options.title || widget.item?.label || 'Switch';
+  $: showIcon = options.showIcon ?? true;
+  $: showState = options.showState ?? true;
+  $: iconColor = options.color || '#ffffff';
+  
   $: item = widget?.item;
-  $: label = item ? (item.label || item.name) : 'Unnamed Switch';
   $: state = item?.state || 'OFF';
-
+  
   let demoState = 'OFF';
   $: displayState = demo ? demoState : state;
 
@@ -65,6 +77,11 @@
       state = item.state;
     }
   }
+
+  $: {
+    console.log('Widget updated:', widget);
+    console.log('Current options:', widget.options);
+  }
 </script>
 
 <button 
@@ -80,14 +97,18 @@
 >
   <div class="widget-content">
     <div class="widget-info">
-      <span class="widget-label">{label}</span>
-      <span class="widget-state">{displayState}</span>
+      <span class="widget-label">{title}</span>
+      {#if showState}
+        <span class="widget-state">{displayState}</span>
+      {/if}
     </div>
+    {#if showIcon}
     <div class="switch-button">
       <div class="switch-track">
         <div class="switch-thumb"></div>
       </div>
     </div>
+    {/if}
   </div>
 </button>
 

@@ -371,10 +371,20 @@
 
   function handleConfigUpdate(event) {
     const updatedWidget = event.detail;
-    dashboard = dashboard.map(w => 
-      w.id === updatedWidget.id ? updatedWidget : w
-    );
-    dispatch('update', { dashboard });
+    console.log('Handling config update:', updatedWidget);
+    const widgetIndex = dashboard.findIndex(w => w.id === updatedWidget.id);
+    if (widgetIndex !== -1) {
+      // Erstelle ein komplett neues Widget-Objekt
+      const updatedDashboard = dashboard.map(w => w.id === updatedWidget.id ? {
+        ...w,
+        options: updatedWidget.options,
+        _updateKey: Date.now()
+      } : w);
+      dashboard = updatedDashboard;
+      console.log('Updated dashboard:', dashboard);
+      
+      dispatch('update', { dashboard });
+    }
     editingWidgetConfig = null;
   }
 </script>
@@ -404,13 +414,15 @@
         use:initializeWidget
       >
         {#if widgetComponents[widget.type]}
+          {@const Component = typeof widgetComponents[widget.type] === 'object' 
+            ? widgetComponents[widget.type][widget.variant || 'default']
+            : widgetComponents[widget.type]}
           <svelte:component 
-            this={typeof widgetComponents[widget.type] === 'object' 
-              ? widgetComponents[widget.type][widget.variant || 'default']
-              : widgetComponents[widget.type]}
+            this={Component}
             {widget}
             {isEditing}
             service={$openhabService}
+            key={widget._updateKey || undefined}
           />
         {/if}
 

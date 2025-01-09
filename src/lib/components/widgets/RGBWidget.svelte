@@ -1,12 +1,18 @@
 <script lang="ts">
-  export let widget;
+  export let widget: any;
   export let isEditing = false;
   export let demo = false;
-  export let service = undefined;
+
+  $: title = widget.options?.title || widget.item?.label || 'RGB Light';
+  $: showIcon = widget.options?.showIcon ?? true;
+  $: showState = widget.options?.showState ?? true;
+  $: iconColor = widget.options?.color || '#ffffff';
+  $: console.log('Widget options updated:', widget.options);
 
   let brightness = parseInt(widget.item?.state || '0');
   let color = '#ff6b6b';
   let selectedMode = 'solid';
+  let currentColor = widget.item?.state || color;
 
   const modes = [
     { id: 'solid', icon: 'circle', label: 'Solid' },
@@ -31,6 +37,7 @@
     
     try {
       color = newColor;
+      currentColor = newColor;
       await service.updateItemState(widget.item.name, newColor);
     } catch (error) {
       console.error('Failed to update color:', error);
@@ -44,10 +51,16 @@
 </script>
 
 <div class="rgb-widget" class:editing={isEditing}>
-  <div class="widget-header">
-    <i class="fas fa-lightbulb" style="color: {color}"></i>
-    <span class="label">{widget.item?.label || 'RGB Light'}</span>
-    <div class="brightness">{brightness}%</div>
+  <div class="header">
+    {#if showIcon}
+      <div class="icon" style="color: {iconColor}">
+        <i class="fas fa-lightbulb"></i>
+      </div>
+    {/if}
+    <div class="name">{title}</div>
+    {#if showState}
+      <div class="state">{currentColor}</div>
+    {/if}
   </div>
 
   <div class="color-preview" style="background: {color}">

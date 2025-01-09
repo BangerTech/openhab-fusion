@@ -21,9 +21,22 @@
 
   $: icon = weatherIcons[condition] || 'sun';
   $: displayTemp = temperature.toFixed(1);
+  $: title = widget.options?.title || widget.item?.label || 'Weather';
+  $: showIcon = widget.options?.showIcon ?? true;
+  $: showState = widget.options?.showState ?? true;
+  $: iconColor = widget.options?.color || '#ffffff';
 </script>
 
 <div class="weather-widget" class:editing={isEditing}>
+  <div class="header">
+    {#if showIcon}
+    <div class="icon" style="color: {iconColor}">
+      <i class="fas fa-cloud-sun"></i>
+    </div>
+    {/if}
+    <div class="name">{title}</div>
+  </div>
+
   <div class="current-weather">
     <div class="main-info">
       <i class="fas fa-{icon} weather-icon"></i>

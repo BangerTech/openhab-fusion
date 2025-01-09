@@ -3,6 +3,11 @@
   export let isEditing = false;
   export let demo = false;
 
+  $: title = widget.options?.title || widget.item?.label || 'Camera';
+  $: showIcon = widget.options?.showIcon ?? true;
+  $: showState = widget.options?.showState ?? true;
+  $: iconColor = widget.options?.color || '#ffffff';
+
   let imageUrl = widget.item?.url || 'demo-camera.jpg';
   let isStreaming = false;
   let lastMotion = widget.item?.lastMotion || 'No motion';
@@ -15,10 +20,10 @@
 
 <div class="ha-card" class:editing={isEditing}>
   <div class="header" role="banner">
-    <div class="icon">
+    <div class="icon" style="color: {iconColor}">
       <i class="fas fa-video" aria-hidden="true"></i>
     </div>
-    <div class="name" role="heading" aria-level="2">{widget.item?.name || 'Camera'}</div>
+    <div class="name" role="heading" aria-level="2">{title}</div>
     <button 
       class="stream-toggle" 
       on:click={toggleStream}

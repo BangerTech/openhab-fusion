@@ -60,14 +60,21 @@
     mode = modes[(currentIndex + 1) % modes.length];
     service.sendCommand(`${widget.item.name}_mode`, mode);
   }
+
+  $: title = widget.options?.title || widget.item?.label || 'Thermostat';
+  $: showIcon = widget.options?.showIcon ?? true;
+  $: showState = widget.options?.showState ?? true;
+  $: iconColor = widget.options?.color || '#ffffff';
 </script>
 
 <div class="ha-card" class:editing={isEditing} style="--mode-color: {modeColors[mode]}">
   <div class="header">
-    <div class="icon">
+    {#if showIcon}
+    <div class="icon" style="color: {iconColor}">
       <i class="fas fa-thermometer-half"></i>
     </div>
-    <div class="name">{widget.item?.name || 'Thermostat'}</div>
+    {/if}
+    <div class="name">{title}</div>
     <button class="mode-button" on:click={toggleMode}>
       <i class="fas fa-{modeIcons[mode]}"></i>
     </button>
