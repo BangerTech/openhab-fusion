@@ -1,253 +1,162 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { OpenHABService } from '../services/openhab';
-  import { connectionStore } from '../stores/connection';
-
-  export let initialUrl = '';
-  const dispatch = createEventDispatcher();
   
+  export let initialUrl: string | null = null;
+  
+  const dispatch = createEventDispatcher();
   let url = initialUrl || '';
-  let connecting = false;
-  let error = '';
-
-  async function connect() {
-    if (!url) {
-      error = 'Please enter an OpenHAB URL';
-      return;
-    }
-    
-    connecting = true;
-    error = '';
-
-    try {
-      // Erstelle einen neuen OpenHAB Service mit dem Proxy-Pfad
-      const service = new OpenHABService('/api');
-      await service.testConnection();
-
-      // Speichere die Original-URL im Store für spätere Verwendung
-      connectionStore.set({
-        url: '/api',  // Wir verwenden den Proxy-Pfad
-        connected: true
-      });
-
-      dispatch('connected', { service, url });
-    } catch (err) {
-      error = 'Connection failed. Please check the URL and try again.';
-      console.error('Connection error:', err);
-    } finally {
-      connecting = false;
+  
+  function handleSubmit() {
+    if (url) {
+      dispatch('connected', { url });
     }
   }
 </script>
 
-<div class="connection-container">
-  <div class="connection-card">
-    <!-- Logo/Icon Section -->
-    <div class="icon-section">
-      <div class="icon-circle">
-        <i class="fas fa-home"></i>
-      </div>
-      <h1>OpenHAB Fusion</h1>
-      <p class="subtitle">Smart Home Dashboard</p>
+<div class="connect-page">
+  <div class="connect-card">
+    <div class="logo">
+      <i class="fas fa-home"></i>
     </div>
-
-    <!-- Connection Form -->
-    <div class="form-section">
+    <h1>OpenHAB Fusion</h1>
+    <p class="subtitle">Smart Home Dashboard</p>
+    
+    <form on:submit|preventDefault={handleSubmit}>
       <div class="input-group">
-        <label for="url">
+        <label for="server-url">
           <i class="fas fa-server"></i>
           Server URL
         </label>
-        <input 
-          type="text" 
-          id="url" 
-          bind:value={url} 
+        <input
+          id="server-url"
+          type="text"
+          bind:value={url}
           placeholder="192.168.1.100:8080"
-          disabled={connecting}
-          on:keydown={(e) => e.key === 'Enter' && connect()}
         />
-        <small>Example: 192.168.1.100:8080 or http://openhab.local:8080</small>
-      </div>
-
-      {#if error}
-        <div class="error-message" role="alert">
-          <i class="fas fa-exclamation-circle"></i>
-          <span>{error}</span>
+        <div class="example">
+          Example: 192.168.1.100:8080 or http://openhab.local:8080
         </div>
-      {/if}
-
-      <button 
-        class="connect-button"
-        on:click={connect} 
-        disabled={connecting}
-      >
-        {#if connecting}
-          <div class="loading-spinner"></div>
-          <span>Connecting...</span>
-        {:else}
-          <i class="fas fa-plug"></i>
-          <span>Connect</span>
-        {/if}
+      </div>
+      
+      <button type="submit" disabled={!url}>
+        <i class="fas fa-plug"></i>
+        Connect
       </button>
-    </div>
+    </form>
   </div>
 </div>
 
 <style>
-  .connection-container {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    background: rgba(240, 240, 240, 0.95);
-    padding: 1rem;
+  .connect-page {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0288d1, #26c6da);
   }
 
-  .connection-card {
-    width: 100%;
-    max-width: 400px;
+  .connect-card {
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 8px 16px rgba(79, 172, 254, 0.1);
-    overflow: hidden;
-    transform: translateY(0);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .connection-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 24px rgba(79, 172, 254, 0.2);
-  }
-
-  .icon-section {
+    border-radius: 16px;
     padding: 2rem;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     text-align: center;
-    background: linear-gradient(135deg, #4facfe, #00f2fe);
-    color: white;
   }
 
-  .icon-circle {
+  .logo {
     width: 80px;
     height: 80px;
-    background: rgba(255,255,255,0.3);
+    background: #26c6da;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin: 0 auto 1rem;
-    display: grid;
-    place-items: center;
-    backdrop-filter: blur(8px);
-  }
-
-  .icon-circle i {
+    color: white;
     font-size: 2rem;
   }
 
   h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
     margin: 0;
+    font-size: 1.8rem;
+    color: #2c3e50;
   }
 
   .subtitle {
-    font-size: 0.9rem;
-    opacity: 0.8;
-    margin: 0.5rem 0 0;
+    color: #7f8c8d;
+    margin-bottom: 2rem;
   }
 
-  .form-section {
-    padding: 2rem;
+  form {
+    width: 100%;
   }
 
   .input-group {
     margin-bottom: 1.5rem;
+    text-align: left;
   }
 
   label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #4a5568;
-    font-size: 0.9rem;
+    color: #34495e;
+    font-weight: 500;
     margin-bottom: 0.5rem;
+  }
+
+  label i {
+    color: #7f8c8d;
   }
 
   input {
     width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    box-sizing: border-box;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     font-size: 1rem;
     transition: all 0.2s;
   }
 
   input:focus {
     outline: none;
-    border-color: #4facfe;
-    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+    border-color: #26c6da;
+    box-shadow: 0 0 0 2px rgba(38, 198, 218, 0.2);
   }
 
-  small {
-    display: block;
-    color: #718096;
-    font-size: 0.75rem;
+  .example {
+    font-size: 0.9rem;
+    color: #95a5a6;
     margin-top: 0.5rem;
   }
 
-  .error-message {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: #fff5f5;
-    color: #c53030;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-  }
-
-  .connect-button {
+  button {
     width: 100%;
-    padding: 0.75rem;
+    padding: 1rem;
+    background: #26c6da;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, #4facfe, #00f2fe);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
     transition: all 0.2s;
   }
 
-  .connect-button:hover:not(:disabled) {
+  button:hover:not(:disabled) {
+    background: #2dd3e7;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.25);
   }
 
-  .connect-button:disabled {
-    opacity: 0.7;
+  button:disabled {
+    background: #bdc3c7;
     cursor: not-allowed;
-  }
-
-  .loading-spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255,255,255,0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  @media (max-width: 480px) {
-    .connection-card {
-      margin: 1rem;
-    }
   }
 </style> 

@@ -11,6 +11,7 @@
 
   export let item: Item;
   export let openhabService: OpenHABService;
+  export let isEditing = false;
 
   let loading = false;
 
@@ -40,6 +41,14 @@
       console.error('Failed to update state:', error);
     } finally {
       loading = false;
+    }
+  }
+
+  function handleInteraction(event) {
+    if (isEditing) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
     }
   }
 

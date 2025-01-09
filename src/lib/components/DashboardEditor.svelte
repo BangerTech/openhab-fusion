@@ -340,6 +340,36 @@
       }
     });
   }
+
+  function initializeGridStack() {
+    grid = GridStack.init({
+      column: 12,
+      row: 12,
+      cellHeight: 100,
+      minRow: 1,
+      float: true,
+      animate: true,
+      resizable: {
+        handles: 'all'
+      },
+      disableDrag: !isEditing,
+      disableResize: !isEditing
+    });
+
+    grid.on('change', (event) => {
+      if (!isEditing) return;
+      
+      const updatedDashboard = event.map(item => ({
+        ...dashboard.find(w => w.id === item.id),
+        x: item.x,
+        y: item.y,
+        w: item.w,
+        h: item.h
+      }));
+      
+      dispatch('update', { dashboard: updatedDashboard });
+    });
+  }
 </script>
 
 <div class="editor-container" class:editing={isEditing}>

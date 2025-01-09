@@ -42,6 +42,18 @@
       type: 'Switch',
       state: 'ON'
     },
+    rgb: {
+      name: 'DemoRGB',
+      label: 'RGB Light',
+      type: 'Color',
+      state: '0,0,100'
+    },
+    thermostat: {
+      name: 'DemoThermostat',
+      label: 'Thermostat',
+      type: 'Number:Temperature',
+      state: '21.5'
+    },
     dimmer: {
       name: 'DemoDimmer',
       label: 'Dimmer',

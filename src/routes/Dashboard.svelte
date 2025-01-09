@@ -11,6 +11,7 @@
   import ItemSelector from '../lib/components/ItemSelector.svelte';
   import { generateUUID } from '../lib/utils/uuid';
   import RoomEditor from '../lib/components/RoomEditor.svelte';
+  import { slide } from 'svelte/transition';
 
   let dashboard = loadDashboard();
   let isEditing = false;
@@ -35,7 +36,20 @@
 
   function loadDashboard() {
     const saved = localStorage.getItem('dashboard');
-    return saved ? JSON.parse(saved) : [];
+    const defaultDashboard = { default: [] };
+    if (!saved) return defaultDashboard;
+    
+    try {
+      const parsed = JSON.parse(saved);
+      // Wenn es ein Array ist (altes Format), konvertiere es
+      if (Array.isArray(parsed)) {
+        return { default: parsed };
+      }
+      return parsed;
+    } catch (e) {
+      console.error('Error loading dashboard:', e);
+      return defaultDashboard;
+    }
   }
 
   function saveDashboard() {
@@ -43,7 +57,11 @@
   }
 
   function handleDashboardUpdate(event) {
-    dashboard = event.detail.dashboard;
+    const updatedWidgets = event.detail.dashboard;
+    dashboard = {
+      ...dashboard,
+      [activeTab]: updatedWidgets
+    };
     saveDashboard();
   }
 
@@ -63,9 +81,15 @@
 
   function loadTabs() {
     const saved = localStorage.getItem('tabs');
-    return saved ? JSON.parse(saved) : [
-      { id: 'default', name: 'Hemma' }
-    ];
+    const defaultTabs = [{ id: 'default', name: 'Hemma' }];
+    if (!saved) return defaultTabs;
+    
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading tabs:', e);
+      return defaultTabs;
+    }
   }
 
   function loadSidebarItems() {
@@ -74,8 +98,32 @@
   }
 
   function handleTabUpdate(event) {
-    tabs = event.detail.tabs;
+    const updatedTabs = event.detail.tabs;
+    tabs = updatedTabs;
+    
+    // Initialisiere leere Dashboards für neue Räume
+    const newDashboard = { ...dashboard };
+    updatedTabs.forEach(tab => {
+      if (!newDashboard[tab.id]) {
+        newDashboard[tab.id] = [];
+      }
+    });
+    
+    // Entferne Dashboards von gelöschten Räumen
+    Object.keys(newDashboard).forEach(roomId => {
+      if (!updatedTabs.find(tab => tab.id === roomId)) {
+        delete newDashboard[roomId];
+      }
+    });
+    
+    dashboard = newDashboard;
+    saveDashboard();
     localStorage.setItem('tabs', JSON.stringify(tabs));
+    
+    // Wenn der aktive Tab gelöscht wurde, wähle den ersten verfügbaren
+    if (!tabs.find(tab => tab.id === activeTab)) {
+      activeTab = tabs[0]?.id || '';
+    }
   }
 
   function handleSidebarUpdate(event) {
@@ -119,18 +167,37 @@
 
   function calculateNextWidgetPosition() {
     const gridSize = 20;
+    const dashboardHeight = document.querySelector('.dashboard-content')?.clientHeight || 800;
+    const rows = Math.floor(dashboardHeight / gridSize);
+    
+    // Erstelle ein Grid-Besetzungs-Array für den aktiven Raum
     const occupied = new Set(
-      dashboard.map(w => `${w.x},${w.y}`)
+      (dashboard[activeTab] || []).map(w => {
+        const positions = [];
+        for (let x = w.x; x < w.x + w.w; x++) {
+          for (let y = w.y; y < w.y + w.h; y++) {
+            positions.push(`${x},${y}`);
+          }
+        }
+        return positions;
+      }).flat()
     );
     
+    // Suche eine freie Position, beginnend von der Mitte
+    const startRow = Math.floor(rows / 3); // Beginne im oberen Drittel
     let x = 0;
-    let y = 0;
+    let y = startRow;
     
     while (occupied.has(`${x},${y}`)) {
       x += 2;
       if (x > 10) {
         x = 0;
         y += 2;
+        
+        // Wenn wir am Ende sind, gehe zurück zum Anfang
+        if (y > rows) {
+          y = 0;
+        }
       }
     }
     
@@ -142,6 +209,7 @@
     const widget = event.detail;
     const newWidget = {
       id: generateUUID(),
+      roomId: activeTab,
       type: widget.type,
       variant: widget.variant || widget.variants[0],
       x: Math.round(placeholderPosition.x / 20),
@@ -166,7 +234,10 @@
       state: item.state
     };
     
-    dashboard = [...dashboard, selectedWidget];
+    dashboard = {
+      ...dashboard,
+      [activeTab]: [...(dashboard[activeTab] || []), selectedWidget]
+    };
     saveDashboard();
     
     showItemSelector = false;
@@ -237,78 +308,83 @@
 
   <div class="main-content">
     <div class="header">
-      <div class="header-nav">
-        <div class="tab-name">
-          {activeTab}
-          {#if isEditing}
-            <button 
-              class="edit-rooms-button" 
-              on:click={() => showTabEditor = true}
-            >
-              <i class="fas fa-pencil"></i>
-              <span>Edit Rooms</span>
-            </button>
-          {/if}
-        </div>
-
-        <div class="nav-controls">
-          {#if isEditing}
-            <div class="nav-items">
-              <button 
-                class:active={editTarget === 'dashboard'}
-                on:click={() => editTarget = 'dashboard'}
-                style="
-                  background: {editTarget === 'dashboard' ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
-                  opacity: {editTarget === 'dashboard' ? '1' : '0.7'};
-                "
-              >
-                <i class="fas fa-th-large"></i>
-                <span>Dashboard</span>
-              </button>
-              
-              <button 
-                class:active={editTarget === 'sidebar'}
-                on:click={() => editTarget = 'sidebar'}
-                style="
-                  background: {editTarget === 'sidebar' ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
-                  opacity: {editTarget === 'sidebar' ? '1' : '0.7'};
-                "
-              >
-                <i class="fas fa-columns"></i>
-                <span>Sidebar</span>
-              </button>
-            </div>
-
-            <button 
-              class="add-button"
-              on:click={handleAddClick}
-            >
-              <i class="fas fa-plus"></i>
-              <span>Add</span>
-            </button>
-          {/if}
+      <div class="header-content">
+        <div class="header-nav">
+          <div class="tab-name">
+            <nav class="room-nav">
+              {#each tabs as tab}
+                <button 
+                  class="room-button" 
+                  class:active={activeTab === tab.id}
+                  on:click={() => activeTab = tab.id}
+                >
+                  <i class="fas fa-home"></i>
+                  {tab.name}
+                </button>
+              {/each}
+            </nav>
+          </div>
 
           <button 
-            class="edit-button"
+            class="toggle-edit-menu"
             on:click={handleEditModeChange}
+            class:active={isEditing}
           >
-            <i class="fas fa-{isEditing ? 'check' : 'edit'}"></i>
-          </button>
-
-          <button 
-            class="disconnect-button"
-            on:click={disconnect}
-          >
-            <i class="fas fa-sign-out-alt"></i>
+            <i class="fas fa-chevron-down"></i>
           </button>
         </div>
+
+        {#if isEditing}
+          <div 
+            class="edit-toolbar"
+            transition:slide|local={{ duration: 300 }}
+          >
+            <div class="toolbar-content">
+              <div class="nav-items">
+                <button 
+                  class:active={editTarget === 'dashboard'}
+                  on:click={() => editTarget = 'dashboard'}
+                >
+                  <i class="fas fa-th-large"></i>
+                  <span>Dashboard</span>
+                </button>
+                
+                <button 
+                  class:active={editTarget === 'sidebar'}
+                  on:click={() => editTarget = 'sidebar'}
+                >
+                  <i class="fas fa-columns"></i>
+                  <span>Sidebar</span>
+                </button>
+              </div>
+
+              <div class="toolbar-actions">
+                <button 
+                  class="add-button"
+                  on:click={handleAddClick}
+                >
+                  <i class="fas fa-plus"></i>
+                  <span>Add</span>
+                </button>
+
+                <button 
+                  class="done-button"
+                  on:click={handleEditModeChange}
+                >
+                  <i class="fas fa-check"></i>
+                  <span>Done</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        {/if}
       </div>
     </div>
 
     <div class="dashboard-content">
       <DashboardEditor
         items={$items}
-        {dashboard}
+        dashboard={dashboard[activeTab] || []}
         {isEditing}
         on:update={handleDashboardUpdate}
       >
@@ -359,6 +435,12 @@
       onUpdate={(updatedTabs) => {
         tabs = updatedTabs;
         localStorage.setItem('tabs', JSON.stringify(tabs));
+        if (tabs.length === 0) {
+          tabs = [{ id: 'default', name: 'Home' }];
+        }
+        if (!tabs.find(tab => tab.id === activeTab)) {
+          activeTab = tabs[0].id;
+        }
       }}
     />
   {/if}
@@ -494,16 +576,20 @@
 
   .header {
     padding: 1rem 2rem;
-    display: flex;
-    align-items: center;
     background: rgba(0, 40, 60, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .header-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
   }
 
   .tab-name {
@@ -534,6 +620,16 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+  }
+
+  .edit-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
   }
 
   .nav-items {
@@ -568,6 +664,11 @@
   .nav-items button.active {
     background: rgba(255, 255, 255, 0.2);
     opacity: 1;
+  }
+
+  .control-buttons {
+    display: flex;
+    gap: 0.5rem;
   }
 
   .edit-button,
@@ -613,5 +714,101 @@
     flex: 1;
     overflow: auto;
     padding: 2rem;
+  }
+
+  .room-nav {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.5rem;
+    max-width: 100%;
+    scrollbar-width: none;
+  }
+
+  .room-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .room-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .room-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .room-button.active {
+    background: rgba(255, 255, 255, 0.25);
+    font-weight: 500;
+  }
+
+  .toggle-edit-menu {
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .toggle-edit-menu:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .toggle-edit-menu.active {
+    transform: rotate(180deg);
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .edit-toolbar {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .toolbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .done-button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .done-button:hover {
+    background: #45a049;
+    transform: translateY(-1px);
   }
 </style> 

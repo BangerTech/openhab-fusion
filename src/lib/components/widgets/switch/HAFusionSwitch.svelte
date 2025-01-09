@@ -21,14 +21,15 @@
 
 <div class="ha-fusion-switch" class:editing={isEditing}>
   <button 
-    class="switch-button" 
+    class="switch-card" 
     class:active={state}
     on:click={toggleState}
     type="button"
   >
-    <i class="fas fa-lightbulb"></i>
+    <div class="icon-container">
+      <i class="fas fa-lightbulb"></i>
+    </div>
     <span class="label">{widget.item?.label || 'Switch'}</span>
-    <div class="state-indicator" class:on={state}></div>
   </button>
 </div>
 
@@ -36,59 +37,83 @@
   .ha-fusion-switch {
     width: 100%;
     height: 100%;
-    padding: 0.5rem;
+    min-height: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .switch-button {
+  .switch-card {
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.1);
+    max-width: 200px;
+    max-height: 200px;
+    background: linear-gradient(135deg, rgba(44, 62, 80, 0.95), rgba(52, 73, 94, 0.95));
     border: none;
-    border-radius: 12px;
-    padding: 1rem;
+    border-radius: min(16px, 15%);
     color: white;
     cursor: pointer;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    transition: all 0.2s;
+    justify-content: center;
+    gap: min(1rem, 10%);
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: min(1.5rem, 10%);
   }
 
-  .switch-button:hover {
-    background: rgba(0, 0, 0, 0.2);
+  .switch-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(38, 198, 218, 0.15);
   }
 
-  .switch-button.active {
-    background: rgba(38, 198, 218, 0.2);
+  .switch-card.active {
+    background: linear-gradient(135deg, #0288d1, #26c6da);
+    box-shadow: 0 6px 12px rgba(38, 198, 218, 0.3);
+  }
+
+  .icon-container {
+    width: min(60px, 45%);
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .active .icon-container {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
   }
 
   i {
-    font-size: 1.5rem;
-    opacity: 0.7;
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    opacity: 0.8;
+    transition: all 0.3s;
   }
 
   .active i {
-    color: #26c6da;
     opacity: 1;
+    transform: scale(1.1);
   }
 
   .label {
-    flex: 1;
-    text-align: left;
-    font-size: 1rem;
-  }
-
-  .state-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transition: all 0.2s;
-  }
-
-  .state-indicator.on {
-    background: #4CAF50;
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    font-weight: 500;
+    opacity: 0.9;
+    text-align: center;
+    padding: 0 0.5rem;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .editing {

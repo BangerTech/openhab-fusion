@@ -60,26 +60,32 @@
   }
 
   let showWidgetSelector = false;
+
+  function handleDrop(event) {
+    if (!isEditing) return;
+    // Implementiere Drag & Drop Logik
+  }
+  
+  function handleRemove(itemId) {
+    if (!isEditing) return;
+    items = items.filter(item => item.id !== itemId);
+    dispatch('update', { items });
+  }
 </script>
 
 <div class="sidebar-editor" class:editing={isEditing}>
-  <div class="sidebar-content">
-    <slot></slot>
-  </div>
-
-  {#if isEditing && editTarget === 'sidebar'}
-    <div class="edit-buttons">
-      <button class="edit-button" on:click={() => editComponent('time')}>
-        <i class="fas fa-pencil"></i>
-      </button>
-      <button class="edit-button" on:click={() => editComponent('date')}>
-        <i class="fas fa-pencil"></i>
-      </button>
-      <button class="edit-button" on:click={() => editComponent('weather')}>
-        <i class="fas fa-pencil"></i>
-      </button>
+  {#if isEditing}
+    <div class="edit-overlay">
+      <div class="edit-controls">
+        <button on:click={() => handleAdd()}>
+          <i class="fas fa-plus"></i>
+          Add Widget
+        </button>
+      </div>
     </div>
   {/if}
+  
+  <slot></slot>
 </div>
 
 <style>
@@ -87,39 +93,22 @@
     position: relative;
     height: 100%;
   }
-
-  .edit-buttons {
+  
+  .edit-overlay {
     position: absolute;
     top: 0;
-    right: -40px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 1rem 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.1);
+    pointer-events: none;
   }
-
-  .edit-button {
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    opacity: 0;
+  
+  .editing .edit-overlay {
+    pointer-events: all;
   }
-
-  .edit-buttons:hover .edit-button {
-    opacity: 1;
-  }
-
-  .edit-button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+  
+  .edit-controls {
+    padding: 1rem;
   }
 </style> 
