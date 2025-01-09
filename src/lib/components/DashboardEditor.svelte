@@ -316,15 +316,14 @@
 
   // Widget-Komponenten-Map
   const widgetComponents = {
-    'switch': {
-      'default': SwitchWidget,
-      'apple': AppleSwitch,
-      'ha-fusion': HAFusionSwitch
-    },
-    'dimmer': DimmerWidget,
-    'number': SensorWidget,
-    'temperature': SensorWidget,
-    'humidity': SensorWidget
+    'switch': WIDGET_TEMPLATES.switch.component,
+    'dimmer': WIDGET_TEMPLATES.dimmer.component,
+    'rgb': WIDGET_TEMPLATES.rgb.component,
+    'thermostat': WIDGET_TEMPLATES.thermostat.component,
+    'vacuum': WIDGET_TEMPLATES.vacuum.component,
+    'weather': WIDGET_TEMPLATES.weather.component,
+    'sensor': WIDGET_TEMPLATES.sensor.component,
+    'temperature': WIDGET_TEMPLATES.temperature.component
   };
 
   // Zugriff auf den OpenHAB-Service aus dem Store
