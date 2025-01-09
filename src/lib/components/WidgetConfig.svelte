@@ -1,41 +1,55 @@
 <script lang="ts">
-  import type { DashboardItem } from '../types/dashboard';
-  import type { WidgetConfig } from '../types/widgets';
   import { createEventDispatcher } from 'svelte';
+  import type { DashboardItem } from '../types/dashboard';
 
   export let widget: DashboardItem;
   
   const dispatch = createEventDispatcher();
-  let config: WidgetConfig = widget.options || {};
+  let config = {
+    title: widget.options?.title || widget.item?.label || '',
+    icon: widget.options?.icon || '',
+    color: widget.options?.color || '#ffffff',
+    showIcon: widget.options?.showIcon ?? true,
+    showState: widget.options?.showState ?? true,
+    ...widget.options
+  };
 
-  function updateConfig() {
-    widget.options = config;
-    dispatch('update', widget);
+  function updateWidget() {
+    const updatedWidget = {
+      ...widget,
+      options: config
+    };
+    dispatch('update', updatedWidget);
   }
 </script>
 
 <div class="widget-config">
-  <h3>Widget Konfiguration</h3>
-  
+  <div class="config-header">
+    <h3>Widget Configuration</h3>
+    <button class="close-button" on:click={() => dispatch('close')}>
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
   <div class="form-group">
-    <label for="title">Titel</label>
+    <label for="title">Title</label>
     <input 
       type="text" 
       id="title" 
-      bind:value={config.title} 
-      on:change={updateConfig}
+      bind:value={config.title}
+      on:change={updateWidget}
     />
   </div>
 
   <div class="form-group">
     <label for="icon">Icon</label>
-    <div class="icon-selector">
+    <div class="icon-input">
       <input 
         type="text" 
         id="icon" 
-        bind:value={config.icon} 
+        bind:value={config.icon}
         placeholder="fas fa-lightbulb"
-        on:change={updateConfig}
+        on:change={updateWidget}
       />
       {#if config.icon}
         <i class={config.icon}></i>
@@ -44,13 +58,23 @@
   </div>
 
   <div class="form-group">
+    <label for="color">Color</label>
+    <input 
+      type="color" 
+      id="color" 
+      bind:value={config.color}
+      on:change={updateWidget}
+    />
+  </div>
+
+  <div class="form-group">
     <label>
       <input 
         type="checkbox" 
-        bind:checked={config.showLabel} 
-        on:change={updateConfig}
+        bind:checked={config.showIcon}
+        on:change={updateWidget}
       />
-      Label anzeigen
+      Show Icon
     </label>
   </div>
 
@@ -58,78 +82,32 @@
     <label>
       <input 
         type="checkbox" 
-        bind:checked={config.showState} 
-        on:change={updateConfig}
+        bind:checked={config.showState}
+        on:change={updateWidget}
       />
-      Status anzeigen
+      Show State
     </label>
   </div>
-
-  {#if widget.type === 'number'}
-    <div class="form-group">
-      <label for="decimals">Dezimalstellen</label>
-      <input 
-        type="number" 
-        id="decimals" 
-        bind:value={config.decimals} 
-        min="0" 
-        max="5"
-        on:change={updateConfig}
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="unit">Einheit</label>
-      <input 
-        type="text" 
-        id="unit" 
-        bind:value={config.unit} 
-        on:change={updateConfig}
-      />
-    </div>
-  {/if}
-
-  {#if widget.type === 'chart'}
-    <div class="form-group">
-      <label for="chartPeriod">Zeitraum</label>
-      <select 
-        id="chartPeriod" 
-        bind:value={config.chartPeriod}
-        on:change={updateConfig}
-      >
-        <option value="1h">1 Stunde</option>
-        <option value="6h">6 Stunden</option>
-        <option value="12h">12 Stunden</option>
-        <option value="24h">24 Stunden</option>
-        <option value="1w">1 Woche</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="chartType">Diagramm-Typ</label>
-      <select 
-        id="chartType" 
-        bind:value={config.chartType}
-        on:change={updateConfig}
-      >
-        <option value="line">Linie</option>
-        <option value="bar">Balken</option>
-      </select>
-    </div>
-  {/if}
 </div>
 
 <style>
   .widget-config {
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    color: var(--text-color);
   }
 
-  h3 {
-    margin: 0 0 1rem 0;
-    color: #333;
+  .config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.5rem;
   }
 
   .form-group {
@@ -139,27 +117,25 @@
   label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #666;
   }
 
   input[type="text"],
-  input[type="number"],
-  select {
+  input[type="color"] {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    font-size: 0.9rem;
+    background: var(--input-background);
+    color: var(--text-color);
   }
 
-  .icon-selector {
+  .icon-input {
     display: flex;
     gap: 0.5rem;
     align-items: center;
   }
 
-  .icon-selector i {
+  .icon-input i {
     font-size: 1.2rem;
-    color: #666;
   }
 </style> 

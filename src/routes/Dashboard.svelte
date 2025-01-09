@@ -12,7 +12,7 @@
   import { generateUUID } from '../lib/utils/uuid';
   import RoomEditor from '../lib/components/RoomEditor.svelte';
   import { slide } from 'svelte/transition';
-  import { WIDGET_TEMPLATES, WIDGET_TYPES } from '../types/widgets';
+  import { WIDGET_TEMPLATES, WIDGET_TYPES } from '../lib/types/widgets';
 
   let dashboard = loadDashboard();
   let isEditing = false;
@@ -82,7 +82,7 @@
 
   function loadTabs() {
     const saved = localStorage.getItem('tabs');
-    const defaultTabs = [{ id: 'default', name: 'Hemma' }];
+    const defaultTabs = [{ id: 'default', name: 'Home' }];
     if (!saved) return defaultTabs;
     
     try {
@@ -282,11 +282,11 @@
         <nav class="sidebar-nav">
           <button class="nav-item active">
             <i class="fas fa-home"></i>
-            Hemma
+            Home
           </button>
           <button class="nav-item">
             <i class="fas fa-shapes"></i>
-            Entities
+            Items
           </button>
         </nav>
       </div>

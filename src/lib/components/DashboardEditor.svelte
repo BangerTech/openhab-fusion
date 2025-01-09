@@ -1,10 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import { fade } from 'svelte/transition';
   import { openhabService } from '../stores';
   import type { DashboardItem } from '../types/dashboard';
   import { WidgetType, WIDGET_TEMPLATES, WIDGET_TYPES } from '../types/widgets';
   import { onMount } from 'svelte';
   import WidgetSetup from './WidgetSetup.svelte';
+  import WidgetConfig from './WidgetConfig.svelte';
   
   // Widget-Komponenten importieren
   import SwitchWidget from './widgets/SwitchWidget.svelte';
@@ -51,6 +53,7 @@
   let gridElement: HTMLElement;
   let gridSize = 20;
   let currentNewWidget: DashboardItem | null = null;
+  let editingWidgetConfig: DashboardItem | null = null;
 
   // Stellen Sie sicher, dass die Template-Suche typsicher ist
   function findTemplate(type: string): WidgetTemplate | undefined {
@@ -360,6 +363,20 @@
       dispatch('update', { dashboard: updatedDashboard });
     });
   }
+
+  function deleteWidget(widgetId: string) {
+    dashboard = dashboard.filter(w => w.id !== widgetId);
+    dispatch('update', { dashboard });
+  }
+
+  function handleConfigUpdate(event) {
+    const updatedWidget = event.detail;
+    dashboard = dashboard.map(w => 
+      w.id === updatedWidget.id ? updatedWidget : w
+    );
+    dispatch('update', { dashboard });
+    editingWidgetConfig = null;
+  }
 </script>
 
 <div class="editor-container" class:editing={isEditing}>
@@ -399,6 +416,20 @@
 
         {#if isEditing}
           <div class="widget-controls">
+            <button 
+              class="edit-button" 
+              title="Edit Widget"
+              on:click={() => editingWidgetConfig = widget}
+            >
+              <i class="fas fa-cog"></i>
+            </button>
+            <button 
+              class="delete-button" 
+              title="Delete Widget"
+              on:click={() => deleteWidget(widget.id)}
+            >
+              <i class="fas fa-trash"></i>
+            </button>
             <button class="resize-handle" title="Resize">
               <i class="fas fa-arrows-alt"></i>
             </button>
@@ -435,6 +466,18 @@
       <button class="close-button" on:click={() => showingItemSelector = false}>
         Cancel
       </button>
+    </div>
+  </div>
+{/if}
+
+{#if editingWidgetConfig}
+  <div class="widget-config-modal" transition:fade>
+    <div class="modal-content">
+      <WidgetConfig 
+        widget={editingWidgetConfig}
+        on:update={handleConfigUpdate}
+        on:close={() => editingWidgetConfig = null}
+      />
     </div>
   </div>
 {/if}
@@ -553,26 +596,46 @@
 
   .widget-controls {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+    top: 0;
+    right: 0;
     display: flex;
-    gap: 0.5rem;
-    z-index: 10;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 0 8px 0 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
   }
 
-  .resize-handle {
+  .widget-item:hover .widget-controls {
+    opacity: 1;
+  }
+
+  .widget-controls button {
     width: 24px;
     height: 24px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
     border: none;
-    cursor: se-resize;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8rem;
-    color: #666;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+  }
+
+  .widget-controls button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  .edit-button:hover {
+    background: var(--primary-color) !important;
+  }
+
+  .delete-button:hover {
+    background: var(--error-color) !important;
   }
 
   .widget-ghost {
@@ -808,5 +871,28 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
+  }
+
+  .widget-config-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: var(--surface-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    min-width: 300px;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 </style> 
