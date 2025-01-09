@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
-  import { WIDGET_TEMPLATES, type WidgetTemplate, WIDGET_ITEM_TYPES } from '../types/widgets';
+  import { WIDGET_TEMPLATES, type WidgetTemplate, WIDGET_ITEM_TYPES, categories } from '../types/widgets';
   import SwitchWidget from './widgets/SwitchWidget.svelte';
   import DimmerWidget from './widgets/DimmerWidget.svelte';
   import SensorWidget from './widgets/SensorWidget.svelte';
@@ -13,20 +13,6 @@
   export let selectedCategory = 'all';
   
   const dispatch = createEventDispatcher();
-
-  const categories = [
-    { id: 'all', name: 'All', icon: 'th' },
-    { id: 'controls', name: 'Controls', icon: 'sliders-h' },
-    { id: 'sensors', name: 'Sensors', icon: 'thermometer-half' },
-    { id: 'other', name: 'Other', icon: 'ellipsis-h' }
-  ];
-
-  const widgetsByCategory = {
-    controls: ['switch', 'dimmer', 'rgb', 'thermostat'],
-    sensors: ['number', 'temperature', 'humidity'],
-    media: ['media-player', 'camera'],
-    other: ['weather', 'chart', 'clock']
-  };
 
   $: availableWidgets = Object.entries(WIDGET_TEMPLATES).map(([key, widget]) => ({
     ...widget,
@@ -270,8 +256,8 @@
 
   .variants-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.5rem;
   }
 
   .preview-content {
@@ -287,32 +273,49 @@
     position: relative;
   }
 
-  /* Skalierung für verschiedene Widget-Typen */
+  /* Basis-Skalierung für alle Widgets */
   .preview-content :global(.ha-card) {
     transform-origin: center;
     position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: 0.5rem;
-  }
-
-  /* Spezifische Skalierungen für verschiedene Widget-Typen */
-  .preview-content[data-widget-type="thermostat"] :global(.ha-card),
-  .preview-content[data-widget-type="vacuum"] :global(.ha-card),
-  .preview-content[data-widget-type="weather"] :global(.ha-card) {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transform: scale(0.7);
   }
 
+  /* Spezifische Anpassungen für verschiedene Widget-Typen */
+  .preview-content[data-widget-type="thermostat"] :global(.ha-card) {
+    transform: scale(0.45);
+  }
+
+  .preview-content[data-widget-type="vacuum"] :global(.ha-card) {
+    transform: scale(0.4);
+  }
+
+  .preview-content[data-widget-type="weather"] :global(.ha-card) {
+    transform: scale(0.35);
+  }
+
   .preview-content[data-widget-type="rgb"] :global(.ha-card) {
-    transform: scale(0.8);
+    transform: scale(0.5);
+  }
+
+  .preview-content[data-widget-type="dimmer"] :global(.ha-card) {
+    transform: scale(0.45);
+  }
+
+  .preview-content[data-widget-type="camera"] :global(.ha-card) {
+    transform: scale(0.4);
+  }
+
+  .preview-content[data-widget-type="contact"] :global(.ha-card) {
+    transform: scale(0.6);
   }
 
   .variant-preview {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 0.4rem;
     border-radius: 12px;
     background: rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -322,8 +325,8 @@
   .variant-label {
     display: block;
     text-align: center;
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
     opacity: 0.8;
   }
 

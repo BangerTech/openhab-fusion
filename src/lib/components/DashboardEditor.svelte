@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { openhabService } from '../stores';
   import type { DashboardItem } from '../types/dashboard';
-  import { WidgetType, WIDGET_TEMPLATES } from '../types/widgets';
+  import { WidgetType, WIDGET_TEMPLATES, WIDGET_TYPES } from '../types/widgets';
   import { onMount } from 'svelte';
   import WidgetSetup from './WidgetSetup.svelte';
   
@@ -51,15 +51,6 @@
   let gridElement: HTMLElement;
   let gridSize = 20;
   let currentNewWidget: DashboardItem | null = null;
-
-  const widgetTypes = [
-    { type: 'switch', icon: 'toggle-on', label: 'Switch', minW: 2, minH: 1 },
-    { type: 'dimmer', icon: 'sliders-h', label: 'Dimmer', minW: 2, minH: 1 },
-    { type: 'number', icon: 'thermometer-half', label: 'Sensor', minW: 2, minH: 1 },
-    { type: 'chart', icon: 'chart-line', label: 'Chart', minW: 4, minH: 3 },
-    { type: 'camera', icon: 'video', label: 'Camera', minW: 4, minH: 3 },
-    { type: 'weather', icon: 'cloud-sun', label: 'Weather', minW: 4, minH: 2 }
-  ];
 
   // Stellen Sie sicher, dass die Template-Suche typsicher ist
   function findTemplate(type: string): WidgetTemplate | undefined {
@@ -217,14 +208,14 @@
   }
 
   function addWidget(type: string, x: number, y: number) {
-    const template = widgetTypes.find(w => w.type === type);
+    const template = WIDGET_TYPES.find(w => w.type === type);
     const newWidget: DashboardItem = {
       id: crypto.randomUUID(),
       type,
       x: Math.round(x / gridSize),
       y: Math.round(y / gridSize),
-      w: template.minW,
-      h: template.minH,
+      w: template.defaultW || template.minW,
+      h: template.defaultH || template.minH,
       item: null,
       options: {}
     };

@@ -16,6 +16,10 @@ import ModernTempWidget from '../components/widgets/temperature/ModernTempWidget
 import MinimalTempWidget from '../components/widgets/temperature/MinimalTempWidget.svelte';
 import DimmerWidget from '../components/widgets/DimmerWidget.svelte';
 import SwitchWidget from '../components/widgets/SwitchWidget.svelte';
+import CameraWidget from '../components/widgets/camera/CameraWidget.svelte';
+import MinimalCamera from '../components/widgets/camera/MinimalCamera.svelte';
+import ContactWidget from '../components/widgets/contact/ContactWidget.svelte';
+import MinimalContact from '../components/widgets/contact/MinimalContact.svelte';
 
 export const OPENHAB_TYPE_MAPPING = {
   'Switch': ['switch', 'light'],
@@ -39,7 +43,9 @@ export const WIDGET_ITEM_TYPES = {
   vacuum: ['Group', 'Switch'],
   weather: ['Group', 'Number', 'String'],
   sensor: ['Number', 'String'],
-  temperature: ['Number:Temperature', 'Number']
+  temperature: ['Number:Temperature', 'Number'],
+  camera: ['String', 'Image'],
+  contact: ['Contact']
 };
 
 export interface WidgetTemplate {
@@ -69,7 +75,7 @@ export const WIDGET_TEMPLATES: Record<string, WidgetTemplate> = {
       minimal: MinimalSwitch
     },
     defaultSize: { w: 2, h: 2 },
-    category: 'controls'
+    category: 'lighting'
   },
   dimmer: {
     type: 'dimmer',
@@ -82,7 +88,7 @@ export const WIDGET_TEMPLATES: Record<string, WidgetTemplate> = {
       slider: SliderDimmer
     },
     defaultSize: { w: 2, h: 3 },
-    category: 'controls'
+    category: 'lighting'
   },
   thermostat: {
     type: 'thermostat',
@@ -118,7 +124,7 @@ export const WIDGET_TEMPLATES: Record<string, WidgetTemplate> = {
       compact: CompactWeather
     },
     defaultSize: { w: 4, h: 4 },
-    category: 'sensors'
+    category: 'weather'
   },
   rgb: {
     type: 'rgb',
@@ -129,7 +135,7 @@ export const WIDGET_TEMPLATES: Record<string, WidgetTemplate> = {
       default: RGBWidget
     },
     defaultSize: { w: 2, h: 4 },
-    category: 'controls'
+    category: 'lighting'
   },
   sensor: {
     type: 'sensor',
@@ -152,7 +158,31 @@ export const WIDGET_TEMPLATES: Record<string, WidgetTemplate> = {
       minimal: MinimalTempWidget
     },
     defaultSize: { w: 2, h: 2 },
-    category: 'sensors'
+    category: 'climate'
+  },
+  camera: {
+    type: 'camera',
+    label: 'Camera',
+    icon: 'video',
+    variants: ['default', 'minimal'],
+    component: {
+      default: CameraWidget,
+      minimal: MinimalCamera
+    },
+    defaultSize: { w: 4, h: 3 },
+    category: 'security'
+  },
+  contact: {
+    type: 'contact',
+    label: 'Contact Sensor',
+    icon: 'door-closed',
+    variants: ['default', 'minimal'],
+    component: {
+      default: ContactWidget,
+      minimal: MinimalContact
+    },
+    defaultSize: { w: 2, h: 2 },
+    category: 'security'
   }
 };
 
@@ -168,4 +198,71 @@ export const categories = [
   { id: 'sensors', name: 'Sensors', icon: 'chart-line' },
   { id: 'security', name: 'Security', icon: 'shield-alt' },
   { id: 'weather', name: 'Weather', icon: 'cloud-sun' }
+];
+
+export interface WidgetTypeDefinition {
+  type: string;
+  icon: string;
+  label: string;
+  minW: number;
+  minH: number;
+  defaultW: number;
+  defaultH: number;
+}
+
+export const WIDGET_TYPES: WidgetTypeDefinition[] = [
+  { 
+    type: 'switch', 
+    icon: 'toggle-on', 
+    label: 'Switch', 
+    minW: 2, 
+    minH: 1, 
+    defaultW: 3, 
+    defaultH: 2 
+  },
+  { 
+    type: 'dimmer', 
+    icon: 'sliders-h', 
+    label: 'Dimmer', 
+    minW: 2, 
+    minH: 1, 
+    defaultW: 3, 
+    defaultH: 2 
+  },
+  { 
+    type: 'number', 
+    icon: 'thermometer-half', 
+    label: 'Sensor', 
+    minW: 2, 
+    minH: 1, 
+    defaultW: 3, 
+    defaultH: 2 
+  },
+  { 
+    type: 'chart', 
+    icon: 'chart-line', 
+    label: 'Chart', 
+    minW: 4, 
+    minH: 3, 
+    defaultW: 5, 
+    defaultH: 4 
+  },
+  { 
+    type: 'camera', 
+    icon: 'video', 
+    label: 'Camera', 
+    minW: 4, 
+    minH: 3, 
+    defaultW: 5, 
+    defaultH: 4 
+  },
+  { 
+    type: 'weather', 
+    icon: 'cloud-sun', 
+    label: 'Weather', 
+    minW: 4, 
+    minH: 2, 
+    defaultW: 5, 
+    defaultH: 3 
+  }
 ]; 

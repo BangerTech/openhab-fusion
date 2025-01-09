@@ -12,6 +12,7 @@
   import { generateUUID } from '../lib/utils/uuid';
   import RoomEditor from '../lib/components/RoomEditor.svelte';
   import { slide } from 'svelte/transition';
+  import { WIDGET_TEMPLATES, WIDGET_TYPES } from '../types/widgets';
 
   let dashboard = loadDashboard();
   let isEditing = false;
@@ -207,6 +208,9 @@
   function handleWidgetSelect(event) {
     console.log('Widget selected:', event.detail);
     const widget = event.detail;
+    // Finde die Widget-Definition mit den Standard- und Mindestgrößen
+    const widgetType = WIDGET_TYPES.find(w => w.type === widget.type);
+    
     const newWidget = {
       id: generateUUID(),
       roomId: activeTab,
@@ -214,8 +218,8 @@
       variant: widget.variant || widget.variants[0],
       x: Math.round(placeholderPosition.x / 20),
       y: Math.round(placeholderPosition.y / 20),
-      w: widget.defaultSize.w,
-      h: widget.defaultSize.h,
+      w: widgetType?.defaultW || widget.defaultSize.w,
+      h: widgetType?.defaultH || widget.defaultSize.h,
       options: {}
     };
     
