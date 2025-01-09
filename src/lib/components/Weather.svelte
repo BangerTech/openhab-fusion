@@ -1,33 +1,98 @@
 <script lang="ts">
-  // Hier später die Wetter-API-Integration
-  let temperature = "1°C";
-  let condition = "Snowy, rainy";
+  import { getContext } from 'svelte';
+  
+  export let settings = {
+    showTemp: true,
+    showHumidity: true,
+    fontSize: '1rem',
+    unit: 'celsius'
+  };
+  
+  export let isEditing = false;
+  
+  // Hier würden normalerweise die Wetterdaten von einer API kommen
+  let weatherData = {
+    temp: 2,
+    humidity: 81
+  };
+  
+  const { handleDragStart, handleDragEnd } = getContext('sidebarEditor');
+  
+  function handleEditClick() {
+    const event = new CustomEvent('editWidget', {
+      detail: {
+        id: 'weather-1',
+        type: 'weather'
+      },
+      bubbles: true
+    });
+    
+    dispatchEvent(event);
+  }
 </script>
 
-<div class="weather">
-  <div class="current">
-    <i class="fas fa-cloud-snow"></i>
-    <span class="temp">{temperature}</span>
-  </div>
-  <div class="condition">{condition}</div>
+<div 
+  class="widget weather-widget" 
+  data-widget-id="weather-1"
+  data-widget-type="weather"
+  style="font-size: {settings.fontSize}"
+  draggable={isEditing}
+  on:dragstart={handleDragStart}
+  on:dragend={handleDragEnd}
+>
+  {#if settings.showTemp}
+    <div class="temperature">
+      {weatherData.temp}°{settings.unit === 'celsius' ? 'C' : 'F'}
+    </div>
+  {/if}
+  
+  {#if settings.showHumidity}
+    <div class="humidity">
+      {weatherData.humidity}%
+    </div>
+  {/if}
+  
+  {#if isEditing}
+    <button class="edit-button" on:click={handleEditClick}>
+      <i class="fas fa-cog"></i>
+    </button>
+  {/if}
 </div>
 
 <style>
-  .weather {
-    text-align: center;
+  .weather-widget {
     padding: 1rem;
-  }
-
-  .current {
+    background: var(--surface-container-low);
+    border-radius: 8px;
+    position: relative;
     display: flex;
-    align-items: center;
-    justify-content: center;
     gap: 1rem;
-    font-size: 1.5rem;
+    align-items: center;
   }
-
-  .condition {
-    font-size: 0.9rem;
+  
+  .temperature {
+    font-size: 1.5em;
+    font-weight: 500;
+  }
+  
+  .humidity {
     opacity: 0.8;
+  }
+  
+  .edit-button {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    background: var(--surface);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  
+  .weather-widget:hover .edit-button {
+    opacity: 1;
   }
 </style> 

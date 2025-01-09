@@ -1,91 +1,63 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import type { SidebarItem } from '../types/sidebar';
-  import { onMount } from 'svelte';
-
-  export let items: SidebarItem[] = [];
+  import { createEventDispatcher, setContext } from 'svelte';
+  import { widgetPositions } from '../stores/widgets';
+  
   export let isEditing = false;
-  export let editTarget: 'dashboard' | 'sidebar' | 'tabs' = 'dashboard';
-  export let settings = {
-    title: 'Home',
-    showTime: true,
-    showDate: true,
-    showWeather: true
-  };
-
+  export let editTarget: 'dashboard' | 'sidebar' = 'dashboard';
+  
   const dispatch = createEventDispatcher();
-
-  let time = new Date().toLocaleTimeString();
-  let date = new Date().toLocaleDateString('de-DE', { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long' 
-  });
-  let weather = { temp: '21', humidity: '65' };
   
-  let navigation = [
-    { id: 'home', label: 'Home', icon: 'home', active: true },
-    { id: 'entities', label: 'Entities', icon: 'shapes', active: false }
-  ];
-
-  // Zeit aktualisieren
-  onMount(() => {
-    const interval = setInterval(() => {
-      time = new Date().toLocaleTimeString();
-      date = new Date().toLocaleDateString('de-DE', { 
-        weekday: 'long', 
-        day: 'numeric', 
-        month: 'long' 
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  });
-
-  function editComponent(type: string) {
-    dispatch('editComponent', { type });
-  }
-
-  function editNavItem(item: any) {
-    dispatch('editNavItem', { item });
-  }
-
-  function updateSettings(newSettings) {
-    settings = { ...settings, ...newSettings };
-    dispatch('updateSettings', settings);
-  }
-
-  function addSidebarWidget() {
-    showWidgetSelector = true;
-  }
-
-  let showWidgetSelector = false;
-
-  function handleDrop(event) {
-    if (!isEditing) return;
-    // Implementiere Drag & Drop Logik
+  let draggedWidget: HTMLElement | null = null;
+  
+  $: isEditingSidebar = isEditing && editTarget === 'sidebar';
+  
+  function handleDragStart(event: DragEvent) {
+    if (!isEditingSidebar) return;
+    
+    const widget = event.target as HTMLElement;
+    draggedWidget = widget;
+    widget.classList.add('dragging');
+    
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', widget.dataset.widgetId || '');
+    }
   }
   
-  function handleRemove(itemId) {
-    if (!isEditing) return;
-    items = items.filter(item => item.id !== itemId);
-    dispatch('update', { items });
+  function handleDragOver(event: DragEvent) {
+    if (!isEditingSidebar || !draggedWidget) return;
+    event.preventDefault();
   }
+  
+  function handleDragEnd(event: DragEvent) {
+    if (!isEditingSidebar) return;
+    
+    const widget = event.target as HTMLElement;
+    widget.classList.remove('dragging');
+    draggedWidget = null;
+  }
+  
+  function handleEdit(widget: HTMLElement) {
+    dispatch('editWidget', {
+      id: widget.dataset.widgetId,
+      type: widget.dataset.widgetType
+    });
+  }
+  
+  setContext('sidebarEditor', {
+    handleDragStart,
+    handleDragEnd
+  });
 </script>
 
-<div class="sidebar-editor" class:editing={isEditing}>
-  {#if isEditing}
-    <div class="edit-overlay">
-      <div class="edit-controls">
-        <button on:click={() => handleAdd()}>
-          <i class="fas fa-plus"></i>
-          Add Widget
-        </button>
-      </div>
-    </div>
-  {/if}
-  
-  <slot></slot>
+<div 
+  class="sidebar-editor" 
+  class:editing={isEditingSidebar}
+  on:dragover={handleDragOver}
+>
+  <div class="widgets-container">
+    <slot />
+  </div>
 </div>
 
 <style>
@@ -94,21 +66,25 @@
     height: 100%;
   }
   
-  .edit-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.1);
-    pointer-events: none;
+  .widgets-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
   
-  .editing .edit-overlay {
-    pointer-events: all;
+  :global(.sidebar-editor.editing .widget) {
+    cursor: move;
+    user-select: none;
+    transition: transform 0.2s, box-shadow 0.2s;
   }
   
-  .edit-controls {
-    padding: 1rem;
+  :global(.sidebar-editor.editing .widget.dragging) {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  
+  :global(.sidebar-editor.editing .widget:hover) {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 2px var(--primary);
   }
 </style> 

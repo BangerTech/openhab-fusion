@@ -1,20 +1,18 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  
-  export let isEditing = false;
+  import { editorStore } from '../stores/editor';
   
   const dispatch = createEventDispatcher();
+  
+  $: isEditing = $editorStore.isEditing;
+  $: editTarget = $editorStore.editTarget;
   
   function toggleEdit() {
     dispatch('toggleEdit');
   }
   
-  function addWidget() {
-    dispatch('addWidget');
-  }
-
-  function handleDisconnect() {
-    dispatch('disconnect');
+  function setEditTarget(target: 'dashboard' | 'sidebar') {
+    editorStore.setTarget(target);
   }
 </script>
 
@@ -29,6 +27,22 @@
         <button class="control-button" on:click={addWidget}>
           <i class="fas fa-plus"></i>
           Add Widget
+        </button>
+        <button 
+          class="control-button" 
+          class:active={editTarget === 'dashboard'}
+          on:click={() => setEditTarget('dashboard')}
+        >
+          <i class="fas fa-th-large"></i>
+          Dashboard
+        </button>
+        <button 
+          class="control-button" 
+          class:active={editTarget === 'sidebar'}
+          on:click={() => setEditTarget('sidebar')}
+        >
+          <i class="fas fa-columns"></i>
+          Sidebar
         </button>
       {:else}
         <button class="edit-button" on:click={toggleEdit}>
@@ -109,5 +123,10 @@
 
   .disconnect-button:hover {
     opacity: 0.9;
+  }
+
+  .control-button.active {
+    background: var(--primary);
+    color: var(--on-primary);
   }
 </style> 

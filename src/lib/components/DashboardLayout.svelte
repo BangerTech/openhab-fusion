@@ -2,11 +2,10 @@
   import EditToolbar from './EditToolbar.svelte';
   import Sidebar from './Sidebar.svelte';
   import { currentView } from '../stores/view';
-  
-  export let isEditing = false;
+  import { editorStore } from '../stores/editor';
 
   function handleToggleEdit() {
-    isEditing = !isEditing;
+    editorStore.toggleEdit();
   }
 
   function handleDisconnect() {
@@ -20,7 +19,6 @@
 
 <div class="dashboard-layout">
   <EditToolbar 
-    {isEditing}
     on:toggleEdit={handleToggleEdit}
     on:disconnect={handleDisconnect}
     on:addWidget={handleAddWidget}
@@ -33,14 +31,14 @@
       <h1>{$currentView}</h1>
       <button 
         class="edit-toggle"
-        class:active={isEditing}
+        class:active={editorStore.isEditing}
         on:click={handleToggleEdit}
       >
         <i class="fas fa-edit"></i>
       </button>
     </div>
 
-    <main class="dashboard-content" class:editing={isEditing}>
+    <main class="dashboard-content" class:editing={editorStore.isEditing}>
       <slot />
     </main>
   </div>
