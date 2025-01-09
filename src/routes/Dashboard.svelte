@@ -10,6 +10,7 @@
   import WidgetPlaceholder from '../lib/components/WidgetPlaceholder.svelte';
   import ItemSelector from '../lib/components/ItemSelector.svelte';
   import { generateUUID } from '../lib/utils/uuid';
+  import RoomEditor from '../lib/components/RoomEditor.svelte';
 
   let dashboard = loadDashboard();
   let isEditing = false;
@@ -171,22 +172,6 @@
     showItemSelector = false;
     selectedWidget = null;
     showPlaceholder = false;
-  }
-
-  function addNewTab() {
-    tabs = [...tabs, { id: generateUUID(), name: 'New Room' }];
-    localStorage.setItem('tabs', JSON.stringify(tabs));
-  }
-
-  function removeTab(id: string) {
-    tabs = tabs.filter(tab => tab.id !== id);
-    if (tabs.length === 0) {
-      tabs = [{ id: 'default', name: 'Home' }];
-    }
-    if (activeTab === id) {
-      activeTab = tabs[0].id;
-    }
-    localStorage.setItem('tabs', JSON.stringify(tabs));
   }
 
   function handlePlaceholderClick() {
@@ -368,32 +353,14 @@
   {/if}
 
   {#if showTabEditor}
-    <div class="tab-editor-modal">
-      <div class="modal-content">
-        <h3>Edit Rooms</h3>
-        <div class="rooms-list">
-          {#each tabs as tab}
-            <div class="room-item">
-              <input 
-                type="text" 
-                bind:value={tab.name}
-                placeholder="Room name"
-              />
-              <button class="delete-room" on:click={() => removeTab(tab.id)}>
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          {/each}
-          <button class="add-room" on:click={addNewTab}>
-            <i class="fas fa-plus"></i>
-            Add Room
-          </button>
-        </div>
-        <div class="modal-actions">
-          <button on:click={() => showTabEditor = false}>Close</button>
-        </div>
-      </div>
-    </div>
+    <RoomEditor
+      tabs={tabs}
+      onClose={() => showTabEditor = false}
+      onUpdate={(updatedTabs) => {
+        tabs = updatedTabs;
+        localStorage.setItem('tabs', JSON.stringify(tabs));
+      }}
+    />
   {/if}
 </div>
 

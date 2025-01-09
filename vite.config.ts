@@ -26,5 +26,10 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['svelte-routing']
+  },
+  resolve: {
+    alias: {
+      $lib: path.resolve('./src/lib')
+    }
   }
 }) 

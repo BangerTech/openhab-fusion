@@ -9,7 +9,6 @@
 
 <button
   type="button"
-  role="button"
   tabindex="0"
   class="widget-placeholder"
   style="

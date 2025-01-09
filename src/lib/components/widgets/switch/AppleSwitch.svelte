@@ -1,130 +1,98 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import type { DashboardItem } from '../../../types/dashboard';
-  
-  export let widget: DashboardItem;
+  export let widget;
   export let isEditing = false;
-  export let service: any;
-  
-  const dispatch = createEventDispatcher();
-  
-  $: item = widget?.item;
-  $: state = item?.state || 'OFF';
-  $: label = item?.label || 'Switch';
+  export let demo = false;
+  export let service = undefined;
 
-  async function toggleSwitch() {
-    if (isEditing) return;
+  let state = widget.item?.state === 'ON';
+  
+  async function toggleState() {
+    if (demo) return;
     
+    state = !state;
     try {
-      const newState = state === 'ON' ? 'OFF' : 'ON';
-      state = newState; // Optimistisches Update
-      await service.updateItemState(item.name, newState);
+      await service.updateItemState(widget.item.name, state ? 'ON' : 'OFF');
     } catch (error) {
-      state = state === 'ON' ? 'OFF' : 'ON'; // Zurücksetzen bei Fehler
       console.error('Failed to update switch state:', error);
+      state = !state; // Revert on error
     }
   }
 </script>
 
-<button 
-  class="apple-switch"
-  class:active={state === 'ON'}
-  class:editing={isEditing}
-  on:click={toggleSwitch}
-  disabled={isEditing}
->
-  <div class="content">
-    <div class="icon-wrapper">
-      <i class="fas fa-lightbulb"></i>
-      <div class="status-indicator"></div>
+<div class="apple-switch" class:editing={isEditing}>
+  <button 
+    class="switch-button" 
+    class:active={state}
+    on:click={toggleState}
+    type="button"
+  >
+    <div class="switch-track">
+      <div class="switch-thumb" />
     </div>
-    <div class="info">
-      <span class="label">{label}</span>
-      <span class="state">{state}</span>
-    </div>
-  </div>
-</button>
+    <span class="label">{widget.item?.label || 'Switch'}</span>
+  </button>
+</div>
 
 <style>
   .apple-switch {
     width: 100%;
     height: 100%;
-    padding: 1.5rem;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .switch-button {
+    width: 100%;
+    background: none;
     border: none;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    color: white;
+    padding: 0.5rem;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .content {
-    height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
   }
 
-  .icon-wrapper {
+  .switch-track {
     position: relative;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: min(100%, 60px);  /* Maximale Breite begrenzen */
+    height: 0;
+    padding-bottom: min(31px, 52%); /* Aspect ratio beibehalten */
     background: rgba(255, 255, 255, 0.1);
-    display: grid;
-    place-items: center;
-    font-size: 1.2rem;
+    border-radius: 999px;
+    transition: all 0.2s;
   }
 
-  .status-indicator {
+  .switch-thumb {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 12px;
-    height: 12px;
+    top: 2px;
+    left: 2px;
+    width: calc(100% / 2 - 4px);
+    height: calc(100% - 4px);
+    aspect-ratio: 1;  /* Kreis beibehalten */
+    background: white;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    transition: all 0.3s;
+    transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
-  .info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    text-align: left;
+  .active .switch-track {
+    background: rgb(48, 209, 88);
+  }
+
+  .active .switch-thumb {
+    left: calc(50% + 2px);
   }
 
   .label {
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 0.9rem;
+    opacity: 0.9;
   }
 
-  .state {
-    font-size: 0.8rem;
-    opacity: 0.7;
-  }
-
-  .apple-switch.active {
-    background: rgba(38, 198, 218, 0.2);
-  }
-
-  .apple-switch.active .icon-wrapper {
-    background: #26c6da;
-  }
-
-  .apple-switch.active .status-indicator {
-    background: #4CAF50;
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-
-  .apple-switch:hover {
-    transform: scale(1.02);
-  }
-
-  .apple-switch.editing {
-    opacity: 0.7;
-    cursor: default;
+  .editing {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
   }
 </style> 

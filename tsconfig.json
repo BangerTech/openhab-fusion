@@ -8,17 +8,13 @@
     "allowJs": true,
     "checkJs": true,
     "isolatedModules": true,
-    "moduleResolution": "node",
-    "types": [
-      "node",
-      "vite/client"
-    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "$lib/*": ["src/lib/*"]
     }
   },
   "include": [
+    "src/**/*.d.ts",
     "src/**/*.ts",
     "src/**/*.js",
     "src/**/*.svelte"

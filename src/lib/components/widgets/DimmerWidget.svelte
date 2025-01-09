@@ -1,46 +1,57 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  export let widget: any;
-  export let item: any;
+  export let widget;
   export let isEditing = false;
+  export let demo = false;
+  export let service = undefined;
 
-  const dispatch = createEventDispatcher();
+  let value = parseInt(widget.item?.state || '0');
+  let isDragging = false;
 
-  function updateValue(event: Event) {
-    const target = event.target as HTMLInputElement;
-    if (!item?.name) return;
+  async function updateValue(newValue: number) {
+    if (demo) return;
     
-    fetch(`/api/rest/items/${item.name}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain',
-        'Accept': 'application/json'
-      },
-      body: target.value
-    }).then(() => {
-      item.state = target.value;
-      dispatch('change', {
-        itemName: item.name,
-        newState: target.value
-      });
-    }).catch(error => {
+    try {
+      value = newValue;
+      await service.updateItemState(widget.item.name, newValue.toString());
+    } catch (error) {
       console.error('Failed to update dimmer value:', error);
-    });
+    }
+  }
+
+  function handleInput(event) {
+    const newValue = parseInt(event.target.value);
+    updateValue(newValue);
   }
 </script>
 
 <div class="dimmer-widget" class:editing={isEditing}>
-  <div class="widget-content">
-    <span class="widget-label">{item?.label || 'Dimmer'}</span>
-    <div class="value-display">{item?.state || '0'}%</div>
+  <div class="widget-header">
+    <i class="fas fa-lightbulb"></i>
+    <span class="label">{widget.item?.label || 'Dimmer'}</span>
+    <div class="brightness">{value}%</div>
+  </div>
+
+  <div class="slider-container">
+    <div class="slider-track" style="--value: {value}%">
+      <div class="slider-fill"></div>
+    </div>
     <input 
-      type="range" 
-      min="0" 
-      max="100" 
-      value={item?.state || 0}
-      on:input={updateValue}
+      type="range"
+      min="0"
+      max="100"
+      {value}
+      on:input={handleInput}
       disabled={isEditing}
     />
+  </div>
+
+  <div class="controls">
+    <button class="brightness-button min">
+      <i class="fas fa-minus"></i>
+    </button>
+    <button class="brightness-button max">
+      <i class="fas fa-plus"></i>
+    </button>
   </div>
 </div>
 
@@ -48,57 +59,97 @@
   .dimmer-widget {
     width: 100%;
     height: 100%;
+    background: linear-gradient(135deg, rgba(44, 62, 80, 0.95), rgba(52, 73, 94, 0.95));
+    border-radius: 16px;
     padding: 1.5rem;
-    border-radius: 1.2rem;
-    background: rgba(38, 198, 218, 0.15);
     color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .widget-content {
-    height: 100%;
     display: flex;
     flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .widget-header {
+    display: flex;
+    align-items: center;
     gap: 1rem;
   }
 
-  .widget-label {
-    font-size: 1rem;
-    font-weight: 500;
+  .widget-header i {
+    font-size: 1.5rem;
+    color: #ffd700;
     opacity: 0.8;
   }
 
-  .value-display {
-    font-size: 2rem;
-    font-weight: 300;
-    text-align: center;
+  .label {
+    flex: 1;
+    font-size: 1.2rem;
+  }
+
+  .brightness {
+    font-size: 1.2rem;
+    opacity: 0.8;
+  }
+
+  .slider-container {
+    position: relative;
+    padding: 1rem 0;
+  }
+
+  .slider-track {
+    position: relative;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .slider-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--value);
+    background: linear-gradient(to right, #0288d1, #26c6da);
+    border-radius: 2px;
   }
 
   input[type="range"] {
-    -webkit-appearance: none;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-    margin: 1rem 0;
-  }
-
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    background: white;
-    border-radius: 50%;
+    height: 100%;
+    opacity: 0;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
-  input[type="range"]:disabled {
-    opacity: 0.5;
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
   }
 
-  .dimmer-widget.editing {
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.05);
+  .brightness-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .brightness-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  .editing {
+    opacity: 0.7;
+    pointer-events: none;
   }
 </style> 
