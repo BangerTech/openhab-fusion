@@ -1,18 +1,48 @@
+# OpenHAB Fusion
 
-## 🔧 Configuration
+A modern, customizable dashboard for OpenHAB 3+. Built with Svelte and designed to provide a seamless smart home control experience.
 
-1. Connect to your OpenHAB instance by entering the URL (e.g., `http://openhab.local:8080`)
-2. Create rooms and add widgets
-3. Customize your dashboard layout
-4. Save and enjoy!
+## ✨ Features
+
+- 🎨 Modern, clean interface
+- 📱 Responsive design for all devices
+- 🎯 Drag & drop dashboard customization
+- 🎮 Multiple widget variants
+- 🔧 Easy configuration
+- 🏃‍♂️ Fast and lightweight
+- 🔒 Direct OpenHAB connection (no additional server needed)
 
 ## 🖼️ Screenshots
 
-<div align="center">
-  <img src="docs/assets/screenshot1.png" alt="Dashboard" width="80%">
-  <br><br>
-  <img src="docs/assets/screenshot2.png" alt="Edit Mode" width="80%">
-</div>
+### Connect to OpenHAB
+![Connect to OpenHAB](screenshots/screenshot1.png)
+Secure and simple connection to your OpenHAB instance.
+
+### Dashboard Overview
+![Dashboard Overview](screenshots/screenshot2.png)
+Clean and intuitive dashboard interface with customizable widgets.
+
+### Edit Mode
+![Edit Mode](screenshots/screenshot3.png)
+Powerful edit mode with drag & drop functionality and grid layout.
+
+### Item Selection
+![Item Selection](screenshots/screenshot4.png)
+Easy item selection with smart filtering and search.
+
+### Dashboard with Widgets
+![Dashboard with Widgets](screenshots/screenshot5.png)
+Beautiful widgets for all your smart home controls.
+
+## 🚀 Getting Started
+
+### Quick Start
+1. Download the latest release
+2. Extract the files to your web server
+3. Open the web interface
+4. Connect to your OpenHAB instance
+5. Start customizing your dashboard!
+
 
 ## 🧩 Widgets
 
