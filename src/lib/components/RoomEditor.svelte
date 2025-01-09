@@ -7,13 +7,22 @@
   export let onUpdate: (tabs: Array<{id: string, name: string}>) => void;
   
   let editedTabs = [...tabs];
+  let editingTabId: string | null = null;
   
   function addRoom() {
-    editedTabs = [...editedTabs, { id: generateUUID(), name: 'New Room' }];
+    const newTab = { id: generateUUID(), name: 'New Room' };
+    editedTabs = [...editedTabs, newTab];
+    editingTabId = newTab.id;
   }
   
   function removeRoom(id: string) {
     editedTabs = editedTabs.filter(tab => tab.id !== id);
+  }
+  
+  function updateRoomName(id: string, name: string) {
+    editedTabs = editedTabs.map(tab => 
+      tab.id === id ? { ...tab, name } : tab
+    );
   }
   
   function save() {
@@ -35,7 +44,6 @@
     transition:scale 
     on:click|stopPropagation
     on:keydown|stopPropagation
-    role="document"
   >
     <div class="modal-header">
       <h3>Edit Rooms</h3>
@@ -43,33 +51,53 @@
         <i class="fas fa-times"></i>
       </button>
     </div>
-    
+
     <div class="rooms-list">
       {#each editedTabs as tab (tab.id)}
-        <div class="room-item" transition:scale>
-          <div class="room-input">
-            <i class="fas fa-home"></i>
-            <input 
-              type="text" 
-              bind:value={tab.name}
-              placeholder="Room name"
-            />
-            <button class="delete-room" on:click={() => removeRoom(tab.id)}>
+        <div class="room-item" transition:scale|local>
+          <div class="room-content">
+            {#if editingTabId === tab.id}
+              <input
+                type="text"
+                bind:value={tab.name}
+                on:blur={() => editingTabId = null}
+                on:keydown={e => e.key === 'Enter' && (editingTabId = null)}
+                use:focus
+              />
+            {:else}
+              <span class="room-name" on:dblclick={() => editingTabId = tab.id}>
+                {tab.name}
+              </span>
+            {/if}
+          </div>
+          
+          <div class="room-actions">
+            <button 
+              class="edit-button"
+              on:click={() => editingTabId = tab.id}
+            >
+              <i class="fas fa-pencil"></i>
+            </button>
+            <button 
+              class="delete-button"
+              on:click={() => removeRoom(tab.id)}
+            >
               <i class="fas fa-trash"></i>
             </button>
           </div>
         </div>
       {/each}
-      
-      <button class="add-room" on:click={addRoom}>
+    </div>
+
+    <div class="modal-actions">
+      <button class="add-button" on:click={addRoom}>
         <i class="fas fa-plus"></i>
         Add Room
       </button>
-    </div>
-    
-    <div class="modal-actions">
-      <button class="cancel-button" on:click={onClose}>Cancel</button>
-      <button class="save-button" on:click={save}>Save Changes</button>
+      <div class="action-buttons">
+        <button class="cancel-button" on:click={onClose}>Cancel</button>
+        <button class="save-button" on:click={save}>Save</button>
+      </div>
     </div>
   </div>
 </div>
@@ -82,7 +110,6 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -90,159 +117,146 @@
   }
 
   .modal-content {
-    background: rgba(44, 62, 80, 0.95);
-    border-radius: 16px;
-    padding: 1.5rem;
-    min-width: 400px;
+    background: white;
+    border-radius: 12px;
+    width: 90%;
     max-width: 500px;
     max-height: 80vh;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    color: white;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .modal-header h3 {
+  h3 {
     margin: 0;
-    font-size: 1.2rem;
-    font-weight: 500;
-  }
-
-  .close-button {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-  }
-
-  .close-button:hover {
-    color: white;
-    transform: scale(1.1);
+    color: #2c3e50;
   }
 
   .rooms-list {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin: 1rem 0;
-    max-height: 50vh;
-    overflow-y: auto;
+    gap: 0.5rem;
   }
 
   .room-item {
-    transition: all 0.2s;
-  }
-
-  .room-input {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 0.8rem;
-    border-radius: 12px;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
     transition: all 0.2s;
   }
 
-  .room-input:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateX(5px);
+  .room-item:hover {
+    background: #f1f3f5;
+  }
+
+  .room-content {
+    flex: 1;
+    margin-right: 1rem;
   }
 
   input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1rem;
-    outline: none;
-  }
-
-  input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .delete-room {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
+    width: 100%;
     padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .room-name {
+    font-size: 1rem;
+    color: #2c3e50;
+  }
+
+  .room-actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+    gap: 0.5rem;
   }
 
-  .delete-room:hover {
-    color: #ff4444;
-    transform: scale(1.1);
-  }
-
-  .add-room {
-    background: rgba(38, 198, 218, 0.2);
-    color: white;
+  button {
+    padding: 0.5rem;
     border: none;
-    padding: 1rem;
-    border-radius: 12px;
+    border-radius: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 0.5rem;
     transition: all 0.2s;
   }
 
-  .add-room:hover {
-    background: rgba(38, 198, 218, 0.3);
-    transform: translateY(-2px);
+  .edit-button,
+  .delete-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid #ddd;
+  }
+
+  .edit-button:hover {
+    background: #e9ecef;
+    border-color: #ced4da;
+  }
+
+  .delete-button:hover {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
   }
 
   .modal-actions {
+    padding: 1rem;
+    border-top: 1px solid #eee;
     display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: space-between;
+    align-items: center;
   }
 
-  button {
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .add-button {
+    background: #26c6da;
+    color: white;
+  }
+
+  .add-button:hover {
+    background: #2dd3e7;
   }
 
   .save-button {
-    background: #26c6da;
+    background: #4CAF50;
     color: white;
-    font-weight: 500;
   }
 
   .save-button:hover {
-    background: #2dd3e7;
-    transform: translateY(-2px);
+    background: #45a049;
   }
 
   .cancel-button {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
   }
 
   .cancel-button:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: #e9ecef;
   }
 </style> 

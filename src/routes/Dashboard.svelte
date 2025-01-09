@@ -356,6 +356,13 @@
                   <i class="fas fa-columns"></i>
                   <span>Sidebar</span>
                 </button>
+
+                <button 
+                  on:click={() => showTabEditor = true}
+                >
+                  <i class="fas fa-door-open"></i>
+                  <span>Edit Rooms</span>
+                </button>
               </div>
 
               <div class="toolbar-actions">
@@ -388,7 +395,7 @@
         {isEditing}
         on:update={handleDashboardUpdate}
       >
-        {#if isEditing && editTarget === 'dashboard' && showPlaceholder}
+        {#if isEditing && editTarget === 'dashboard'}
           <WidgetPlaceholder
             position={placeholderPosition}
             size={{ w: 200, h: 100 }}
