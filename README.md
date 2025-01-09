@@ -15,23 +15,23 @@ A modern, customizable dashboard for OpenHAB 3+. Built with Svelte and designed 
 ## 🖼️ Screenshots
 
 ### Connect to OpenHAB
-![Connect to OpenHAB](screenshots/screenshot1.png)
+![Connect to OpenHAB](docs/assets/screenshot1.png)
 Secure and simple connection to your OpenHAB instance.
 
 ### Dashboard Overview
-![Dashboard Overview](screenshots/screenshot2.png)
+![Dashboard Overview](docs/assets/screenshot2.png)
 Clean and intuitive dashboard interface with customizable widgets.
 
 ### Edit Mode
-![Edit Mode](screenshots/screenshot3.png)
+![Edit Mode](docs/assets/screenshot3.png)
 Powerful edit mode with drag & drop functionality and grid layout.
 
 ### Item Selection
-![Item Selection](screenshots/screenshot4.png)
+![Item Selection](docs/assets/screenshot4.png)
 Easy item selection with smart filtering and search.
 
 ### Dashboard with Widgets
-![Dashboard with Widgets](screenshots/screenshot5.png)
+![Dashboard with Widgets](docs/assets/screenshot5.png)
 Beautiful widgets for all your smart home controls.
 
 ## 🚀 Getting Started
