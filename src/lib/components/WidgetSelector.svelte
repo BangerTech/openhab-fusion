@@ -5,8 +5,10 @@
   import SwitchWidget from './widgets/SwitchWidget.svelte';
   import DimmerWidget from './widgets/DimmerWidget.svelte';
   import SensorWidget from './widgets/SensorWidget.svelte';
+  import AppleSwitch from './widgets/switch/AppleSwitch.svelte';
+  import HAFusionSwitch from './widgets/switch/HAFusionSwitch.svelte';
   
-  export let items: any[];
+  export let items: any[] = [];
   export let selectedCategory = 'all';
   
   const dispatch = createEventDispatcher();
@@ -71,6 +73,20 @@
       state: '50'
     }
   };
+
+  const demoService = {
+    updateItemState: () => Promise.resolve()
+  };
+
+  function handleWidgetSelect(widget, variant) {
+    dispatch('select', {
+      type: widget.type,
+      variant: variant || widget.variants[0],
+      defaultSize: widget.defaultSize,
+      minSize: widget.minSize,
+      maxSize: widget.maxSize
+    });
+  }
 </script>
 
 <div class="widget-selector" transition:fade>
@@ -95,22 +111,66 @@
 
   <div class="widgets-grid">
     {#each filteredWidgets as widget}
-      <button 
+      <div 
         class="widget-preview"
-        on:click={() => dispatch('select', widget)}
       >
         <div class="preview-content">
           {#if widget.type === 'switch'}
-            <SwitchWidget
-              widget={{
-                type: 'switch',
-                variant: 'default',
-                item: demoItems.switch,
-                options: {}
-              }}
-              isEditing={false}
-              demo={true}
-            />
+            <div class="widget-variants">
+              <button 
+                class="variant-preview"
+                on:click|stopPropagation={() => handleWidgetSelect(widget, 'default')}
+              >
+                <SwitchWidget
+                  widget={{
+                    type: 'switch',
+                    variant: 'default',
+                    item: demoItems.switch,
+                    options: {}
+                  }}
+                  isEditing={false}
+                  demo={true}
+                  service={demoService}
+                />
+                <span class="variant-label">Default</span>
+              </button>
+
+              <button 
+                class="variant-preview"
+                on:click|stopPropagation={() => handleWidgetSelect(widget, 'apple')}
+              >
+                <AppleSwitch
+                  widget={{
+                    type: 'switch',
+                    variant: 'apple',
+                    item: demoItems.switch,
+                    options: {}
+                  }}
+                  isEditing={false}
+                  demo={true}
+                  service={demoService}
+                />
+                <span class="variant-label">Apple Style</span>
+              </button>
+
+              <button 
+                class="variant-preview"
+                on:click|stopPropagation={() => handleWidgetSelect(widget, 'ha-fusion')}
+              >
+                <HAFusionSwitch
+                  widget={{
+                    type: 'switch',
+                    variant: 'ha-fusion',
+                    item: demoItems.switch,
+                    options: {}
+                  }}
+                  isEditing={false}
+                  demo={true}
+                  service={demoService}
+                />
+                <span class="variant-label">HA Fusion</span>
+              </button>
+            </div>
           {:else if widget.type === 'dimmer'}
             <DimmerWidget
               widget={{
@@ -192,7 +252,7 @@
             {/if}
           </span>
         </div>
-      </button>
+      </div>
     {/each}
   </div>
 </div>
@@ -230,7 +290,8 @@
     padding-right: 0.5rem;
   }
 
-  .widget-preview {
+  .widget-preview,
+  .variant-preview {
     background: rgba(255, 255, 255, 0.05);
     border: none;
     border-radius: 12px;
@@ -241,7 +302,8 @@
     color: white;
   }
 
-  .widget-preview:hover {
+  .widget-preview:hover,
+  .variant-preview:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
   }
@@ -281,5 +343,23 @@
     align-items: center;
     justify-content: center;
     gap: 1rem;
+  }
+
+  .widget-variants {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .variant-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .variant-label {
+    font-size: 0.9rem;
+    opacity: 0.7;
   }
 </style> 

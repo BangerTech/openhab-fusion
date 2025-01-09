@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import { openhabService } from '../stores';
   import type { DashboardItem } from '../types/dashboard';
   import { WidgetType, WIDGET_TEMPLATES } from '../types/widgets';
   import { onMount } from 'svelte';
@@ -7,6 +8,8 @@
   
   // Widget-Komponenten importieren
   import SwitchWidget from './widgets/SwitchWidget.svelte';
+  import AppleSwitch from './widgets/switch/AppleSwitch.svelte';
+  import HAFusionSwitch from './widgets/switch/HAFusionSwitch.svelte';
   import SensorWidget from './widgets/SensorWidget.svelte';
   import DimmerWidget from './widgets/DimmerWidget.svelte';
 
@@ -118,7 +121,7 @@
   function initializeWidget(element) {
     if (!isEditing || !interact) return;
 
-    interact(element)
+    const interactable = interact(element)
       .draggable({
         inertia: true,
         modifiers: [
@@ -153,6 +156,14 @@
           end: (event) => updateWidgetSize(event.target)
         }
       });
+
+    return {
+      destroy() {
+        if (interactable) {
+          interactable.unset();
+        }
+      }
+    };
   }
 
   function dragMoveListener(event) {
@@ -251,7 +262,7 @@
     showingItemSelector = true;
   }
 
-  function selectItem(item: OpenHABItem) {
+  function selectItem(item) {
     if (!item) {
       console.error('No item selected');
       return;
@@ -268,7 +279,7 @@
       name: item.name,
       label: item.label || item.name,
       type: item.type,
-      state: item.state || null
+      state: item.state || 'OFF'
     };
     
     const newWidget: DashboardItem = {
@@ -302,6 +313,33 @@
     showingWidgetSetup = false;
     dispatch('update', { dashboard });
   }
+
+  // Widget-Komponenten-Map
+  const widgetComponents = {
+    'switch': {
+      'default': SwitchWidget,
+      'apple': AppleSwitch,
+      'ha-fusion': HAFusionSwitch
+    },
+    'dimmer': DimmerWidget,
+    'number': SensorWidget,
+    'temperature': SensorWidget,
+    'humidity': SensorWidget
+  };
+
+  // Zugriff auf den OpenHAB-Service aus dem Store
+  $: service = $openhabService;
+
+  $: if (!isEditing) {
+    // Alle interaktiven Elemente zurücksetzen
+    const widgets = document.querySelectorAll('.widget-item');
+    widgets.forEach(widget => {
+      const interactable = interact(widget);
+      if (interactable) {
+        interactable.unset();
+      }
+    });
+  }
 </script>
 
 <div class="editor-container" class:editing={isEditing}>
@@ -328,6 +366,17 @@
         "
         use:initializeWidget
       >
+        {#if widgetComponents[widget.type]}
+          <svelte:component 
+            this={typeof widgetComponents[widget.type] === 'object' 
+              ? widgetComponents[widget.type][widget.variant || 'default']
+              : widgetComponents[widget.type]}
+            {widget}
+            {isEditing}
+            service={$openhabService}
+          />
+        {/if}
+
         {#if isEditing}
           <div class="widget-controls">
             <button class="resize-handle" title="Resize">
@@ -335,7 +384,6 @@
             </button>
           </div>
         {/if}
-        <!-- Widget content -->
       </div>
     {/each}
   </div>
@@ -463,16 +511,18 @@
 
   .widget-item {
     position: absolute;
-    background: white;
+    background: transparent;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.2s;
     touch-action: none;
+    overflow: hidden;
   }
 
   .widget-item.editing {
     cursor: move;
     border: 2px solid rgba(38, 198, 218, 0.5);
+    background: rgba(255, 255, 255, 0.05);
     box-shadow: 0 2px 8px rgba(38, 198, 218, 0.2);
   }
 

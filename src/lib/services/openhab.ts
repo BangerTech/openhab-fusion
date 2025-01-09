@@ -1,9 +1,9 @@
 export class OpenHABService {
-  constructor(private baseUrl: string) {
-    if (!baseUrl) {
-      throw new Error('OpenHAB URL is not configured');
-    }
-    console.log('Connecting to OpenHAB at:', baseUrl);
+  private baseUrl: string;
+  private eventSource: EventSource | null = null;
+  
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
   }
 
   private async fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 5000) {
@@ -60,52 +60,51 @@ export class OpenHABService {
 
   async updateItemState(itemName: string, state: string) {
     try {
-      const response = await this.fetchWithTimeout(
-        `${this.baseUrl}/rest/items/${itemName}/state`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'text/plain'
-          },
-          body: state
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/rest/items/${itemName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+          'Accept': 'application/json'
+        },
+        body: state
+      });
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
-      console.error('Failed to update state:', error);
+      console.error('Failed to update item state:', error);
       throw error;
     }
   }
 
   subscribeToUpdates(callback: (event: any) => void) {
-    try {
-      const eventSource = new EventSource(`${this.baseUrl}/rest/events`);
-      
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'ItemStateEvent' || data.type === 'ItemStateChangedEvent') {
-            callback(data);
-          }
-        } catch (error) {
-          console.error('Failed to parse event data:', error);
-        }
-      };
-
-      eventSource.onerror = (error) => {
-        console.error('EventSource failed:', error);
-        setTimeout(() => {
-          this.subscribeToUpdates(callback);
-        }, 5000);
-      };
-
-      return () => eventSource.close();
-    } catch (error) {
-      console.error('Failed to subscribe to updates:', error);
-      throw error;
+    if (this.eventSource) {
+      this.eventSource.close();
     }
+
+    this.eventSource = new EventSource(`${this.baseUrl}/rest/events`);
+    
+    this.eventSource.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'ItemStateEvent' || data.type === 'ItemStateChangedEvent') {
+          const payload = JSON.parse(data.payload);
+          callback({
+            topic: data.topic,
+            payload: payload.value
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing event data:', error);
+      }
+    });
+
+    return () => {
+      if (this.eventSource) {
+        this.eventSource.close();
+      }
+    };
   }
 
   async getItemHistory(itemName: string, period: string) {

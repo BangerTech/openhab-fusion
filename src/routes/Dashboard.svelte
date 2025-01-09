@@ -142,7 +142,7 @@
     const newWidget = {
       id: generateUUID(),
       type: widget.type,
-      variant: widget.variants[0],
+      variant: widget.variant || widget.variants[0],
       x: Math.round(placeholderPosition.x / 20),
       y: Math.round(placeholderPosition.y / 20),
       w: widget.defaultSize.w,
@@ -193,12 +193,17 @@
     showWidgetSelector = true;
     console.log('Opening widget selector');
   }
+
+  function handleEditRooms() {
+    showTabEditor = true;
+  }
 </script>
 
 <div class="dashboard">
   <SidebarEditor 
     items={sidebarItems}
     {isEditing}
+    {editTarget}
     on:update={handleSidebarUpdate}
   >
     <div class="sidebar">
@@ -251,8 +256,12 @@
         <div class="tab-name">
           {activeTab}
           {#if isEditing}
-            <button class="edit-tab" on:click={() => showTabEditor = true}>
+            <button 
+              class="edit-rooms-button" 
+              on:click={() => showTabEditor = true}
+            >
               <i class="fas fa-pencil"></i>
+              <span>Edit Rooms</span>
             </button>
           {/if}
         </div>
@@ -282,18 +291,6 @@
               >
                 <i class="fas fa-columns"></i>
                 <span>Sidebar</span>
-              </button>
-              
-              <button 
-                class:active={editTarget === 'tabs'}
-                on:click={() => editTarget = 'tabs'}
-                style="
-                  background: {editTarget === 'tabs' ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
-                  opacity: {editTarget === 'tabs' ? '1' : '0.7'};
-                "
-              >
-                <i class="fas fa-folder"></i>
-                <span>Rooms</span>
               </button>
             </div>
 
@@ -370,24 +367,32 @@
     />
   {/if}
 
-  {#if showTabEditor && editTarget === 'tabs'}
-    <div class="tab-editor">
-      {#each tabs as tab}
-        <div class="tab-item">
-          <input 
-            type="text" 
-            bind:value={tab.name}
-            placeholder="Room name"
-          />
-          <button on:click={() => removeTab(tab.id)}>
-            <i class="fas fa-trash"></i>
+  {#if showTabEditor}
+    <div class="tab-editor-modal">
+      <div class="modal-content">
+        <h3>Edit Rooms</h3>
+        <div class="rooms-list">
+          {#each tabs as tab}
+            <div class="room-item">
+              <input 
+                type="text" 
+                bind:value={tab.name}
+                placeholder="Room name"
+              />
+              <button class="delete-room" on:click={() => removeTab(tab.id)}>
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          {/each}
+          <button class="add-room" on:click={addNewTab}>
+            <i class="fas fa-plus"></i>
+            Add Room
           </button>
         </div>
-      {/each}
-      <button class="add-tab" on:click={addNewTab}>
-        <i class="fas fa-plus"></i>
-        Add Room
-      </button>
+        <div class="modal-actions">
+          <button on:click={() => showTabEditor = false}>Close</button>
+        </div>
+      </div>
     </div>
   {/if}
 </div>
@@ -541,18 +546,21 @@
     font-size: 1.2rem;
   }
 
-  .edit-tab {
-    padding: 0.5rem;
-    background: transparent;
+  .edit-rooms-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
+    border-radius: 8px;
     color: white;
     cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
   }
 
-  .edit-tab:hover {
-    opacity: 1;
+  .edit-rooms-button:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 
   .nav-controls {
@@ -610,6 +618,12 @@
     transition: all 0.2s;
   }
 
+  .edit-button:hover,
+  .disconnect-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+  }
+
   .add-button {
     background: #4CAF50;
     color: white;
@@ -625,6 +639,7 @@
 
   .add-button:hover {
     background: #45a049;
+    transform: translateY(-1px);
   }
 
   .dashboard-content {

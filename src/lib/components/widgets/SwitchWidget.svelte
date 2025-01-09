@@ -6,6 +6,7 @@
   export let widget: DashboardItem;
   export let isEditing = false;
   export let demo = false;
+  export let service: OpenHABService;
   
   const dispatch = createEventDispatcher();
   
@@ -20,20 +21,10 @@
   onMount(() => {
     if (demo) return;
     
-    const service = new OpenHABService('/api');
-    
     const unsubscribe = service.subscribeToUpdates((event) => {
       if (event.topic?.includes(item?.name)) {
-        if (item) {
-          try {
-            // Parse das JSON-Payload
-            const payload = JSON.parse(event.payload);
-            // Extrahiere den value
-            item.state = payload.value;
-          } catch (error) {
-            console.error('Failed to parse event payload:', error);
-          }
-        }
+        item.state = event.payload;
+        state = event.payload;
       }
     });
 
@@ -51,17 +42,27 @@
     if (!item?.name) return;
     
     try {
-      const service = new OpenHABService('/api');
       const newState = state === 'ON' ? 'OFF' : 'ON';
+      // Optimistisches Update
+      state = newState;
       await service.updateItemState(item.name, newState);
     } catch (error) {
       console.error('Failed to update switch state:', error);
+      // Bei Fehler zurücksetzen
+      state = state === 'ON' ? 'OFF' : 'ON';
     }
   }
 
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === 'Enter' || event.key === ' ') {
       toggleSwitch();
+    }
+  }
+
+  // Initialen Status setzen
+  $: {
+    if (item?.state) {
+      state = item.state;
     }
   }
 </script>

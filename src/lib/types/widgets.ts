@@ -117,5 +117,54 @@ export const WIDGET_TEMPLATES: Record<string, WidgetTemplate> = {
     defaultSize: { w: 4, h: 2 },
     minSize: { w: 2, h: 2 },
     maxSize: { w: 6, h: 4 }
+  },
+  'sidebar-time': {
+    type: 'sidebar-time',
+    variants: ['digital', 'analog'],
+    defaultSize: { w: 2, h: 1 },
+    minSize: { w: 2, h: 1 },
+    maxSize: { w: 4, h: 2 }
+  },
+  'sidebar-date': {
+    type: 'sidebar-date',
+    variants: ['full', 'compact'],
+    defaultSize: { w: 2, h: 1 },
+    minSize: { w: 2, h: 1 },
+    maxSize: { w: 4, h: 1 }
+  },
+  'sidebar-weather': {
+    type: 'sidebar-weather',
+    variants: ['current', 'forecast'],
+    defaultSize: { w: 2, h: 2 },
+    minSize: { w: 2, h: 2 },
+    maxSize: { w: 4, h: 4 }
+  },
+  'sidebar-system': {
+    type: 'sidebar-system',
+    variants: ['default', 'detailed'],
+    defaultSize: { w: 2, h: 1 },
+    minSize: { w: 2, h: 1 },
+    maxSize: { w: 4, h: 2 }
+  },
+  'sidebar-navigation': {
+    type: 'sidebar-navigation',
+    variants: ['default', 'icons'],
+    defaultSize: { w: 2, h: 2 },
+    minSize: { w: 2, h: 1 },
+    maxSize: { w: 4, h: 4 }
+  },
+  'sidebar-media': {
+    type: 'sidebar-media',
+    variants: ['mini', 'full'],
+    defaultSize: { w: 2, h: 1 },
+    minSize: { w: 2, h: 1 },
+    maxSize: { w: 4, h: 2 }
+  },
+  'sidebar-scene': {
+    type: 'sidebar-scene',
+    variants: ['button', 'card'],
+    defaultSize: { w: 2, h: 1 },
+    minSize: { w: 1, h: 1 },
+    maxSize: { w: 4, h: 2 }
   }
 }; 
