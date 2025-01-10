@@ -84,9 +84,13 @@ If you like this project, please consider:
 - Starring the repository ⭐
 - Sharing it with others 🔄
 - Contributing to the code 👨‍💻
+Any bugs or feature requests? Contact me [here](https://github.com/bangertech) or click on the "Issues" tab in the GitHub repository!
 
-## 📧 Contact
+## Sponsorship
 
-Your Name - [@yourusername](https://twitter.com/yourusername)
+<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FD26FHKRWS3US" target="_blank"><img src="https://pics.paypal.com/00/s/N2EwMzk4NzUtOTQ4Yy00Yjc4LWIwYmUtMTA3MWExNWIzYzMz/file.PNG" alt="SUPPORT" height="51"></a>
 
-Project Link: [https://github.com/yourusername/openhab-fusion](https://github.com/yourusername/openhab-fusion)
+## Keywords
+`openhab` `openhab-webui` `docker-management` `container-management` `web-ui` `docker-compose` `system-monitoring` 
+`home-automation` `iot` `smart-home` `monitoring` `dashboard` `debian` `raspberry-pi` 
+`docker-gui` `container-deployment` `devops` `self-hosted` `open-source` 
