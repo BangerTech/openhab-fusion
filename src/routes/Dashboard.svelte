@@ -13,6 +13,7 @@
   import RoomEditor from '../lib/components/RoomEditor.svelte';
   import { slide } from 'svelte/transition';
   import { WIDGET_TEMPLATES, WIDGET_TYPES } from '../lib/types/widgets';
+  import SystemStatsWidget from '../lib/components/widgets/sidebar/SystemStatsWidget.svelte';
 
   let dashboard = loadDashboard();
   let isEditing = false;
@@ -29,6 +30,27 @@
   let selectedWidget = null;
   let showPlaceholder = false;
 
+  const sidebarWidgets = [
+    {
+      id: 'cpu-stats',
+      type: 'system-stats',
+      variant: 'cpu',
+      item: {
+        name: 'System_CPU_Load',
+        label: 'CPU Usage'
+      }
+    },
+    {
+      id: 'ram-stats',
+      type: 'system-stats',
+      variant: 'ram',
+      item: {
+        name: 'System_Memory_Used',
+        label: 'Memory Usage'
+      }
+    }
+  ];
+
   onMount(() => {
     if (!$openhabService) {
       navigate('/connect');
@@ -38,14 +60,16 @@
   function loadDashboard() {
     const saved = localStorage.getItem('dashboard');
     const defaultDashboard = { default: [] };
-    if (!saved) return defaultDashboard;
-    
     try {
-      const parsed = JSON.parse(saved);
-      // Wenn es ein Array ist (altes Format), konvertiere es
-      if (Array.isArray(parsed)) {
-        return { default: parsed };
+      if (window.__dashboardCache && saved === window.__dashboardLastSaved) {
+        return window.__dashboardCache;
       }
+      
+      if (!saved) return defaultDashboard;
+      
+      const parsed = JSON.parse(saved);
+      window.__dashboardCache = parsed;
+      window.__dashboardLastSaved = saved;
       return parsed;
     } catch (e) {
       console.error('Error loading dashboard:', e);
@@ -54,7 +78,13 @@
   }
 
   function saveDashboard() {
-    localStorage.setItem('dashboard', JSON.stringify(dashboard));
+    try {
+      const dashboardString = JSON.stringify(dashboard);
+      localStorage.setItem('dashboard', dashboardString);
+      console.log('Dashboard saved successfully');
+    } catch (error) {
+      console.error('Error saving dashboard:', error);
+    }
   }
 
   function handleDashboardUpdate(event) {
@@ -63,9 +93,7 @@
     const newDashboard = { ...dashboard };
     newDashboard[activeTab] = [...updatedWidgets];
     dashboard = newDashboard;
-    setTimeout(() => {
-      saveDashboard();
-    }, 0);
+    saveDashboard();
     console.log('Dashboard after update:', dashboard);
   }
 

@@ -377,6 +377,7 @@
       // Erstelle ein komplett neues Widget-Objekt
       const updatedDashboard = dashboard.map(w => w.id === updatedWidget.id ? {
         ...w,
+        ...updatedWidget,
         options: updatedWidget.options,
         _updateKey: Date.now()
       } : w);
@@ -395,8 +396,8 @@
 
     <div class="grid-background">
       {#each Array(50) as _, i}
-        <div class="grid-line horizontal" style="top: {i * gridSize}px"></div>
-        <div class="grid-line vertical" style="left: {i * gridSize}px"></div>
+        <div class="grid-line horizontal" style="top: {i * 20}px"></div>
+        <div class="grid-line vertical" style="left: {i * 20}px"></div>
       {/each}
     </div>
 
@@ -565,11 +566,17 @@
     right: 0;
     bottom: 0;
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .editing .grid-background {
+    opacity: 0.1;
   }
 
   .grid-line {
-    display: none;
-    background: rgba(0,0,0,0.03);
+    position: absolute;
+    background: white;
   }
 
   .grid-line.horizontal {

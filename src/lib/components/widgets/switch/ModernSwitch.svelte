@@ -3,8 +3,14 @@
   export let isEditing = false;
   export let demo = false;
   export let service = undefined;
+  export let key = undefined;
 
   let state = widget.item?.state === 'ON';
+  
+  $: options = widget.options || {};
+  $: iconColor = options.color || '#ffffff';
+  $: showIcon = options.showIcon ?? true;
+  $: title = options.title || widget.item?.label || 'Switch';
   
   async function toggleState() {
     if (demo) return;
@@ -26,10 +32,12 @@
     on:click={toggleState}
     type="button"
   >
-    <div class="icon-container">
-      <i class="fas fa-lightbulb"></i>
-    </div>
-    <span class="label">{widget.item?.label || 'Switch'}</span>
+    {#if showIcon}
+      <div class="icon-container" style="color: {iconColor}">
+        <i class="fas fa-lightbulb"></i>
+      </div>
+    {/if}
+    <span class="label">{title}</span>
   </button>
 </div>
 

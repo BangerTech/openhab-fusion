@@ -1,6 +1,9 @@
 export class OpenHABService {
   private baseUrl: string;
   private eventSource: EventSource | null = null;
+  private retryCount = 0;
+  private maxRetries = 3;
+  private retryDelay = 1000;
   
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -70,8 +73,14 @@ export class OpenHABService {
       });
 
       if (!response.ok) {
+        if (this.retryCount < this.maxRetries) {
+          this.retryCount++;
+          await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+          return this.updateItemState(itemName, state);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      this.retryCount = 0;
     } catch (error) {
       console.error('Failed to update item state:', error);
       throw error;
@@ -136,6 +145,23 @@ export class OpenHABService {
       case 'd': return value * 24 * 60 * 60 * 1000;
       case 'w': return value * 7 * 24 * 60 * 60 * 1000;
       default: return 24 * 60 * 60 * 1000; // Default to 24h
+    }
+  }
+
+  async getItemState(itemName: string): Promise<string> {
+    try {
+      const response = await this.fetchWithTimeout(
+        `${this.baseUrl}/rest/items/${itemName}/state`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.text();
+    } catch (error) {
+      console.error('Failed to fetch item state:', error);
+      throw error;
     }
   }
 } 
